@@ -1,0 +1,2358 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fb;
+    min-height: 100vh;
+    padding: 32px 20px;
+    color: #1f2933;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* 背景食物/植物装饰 */
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    z-index: -1;
+    pointer-events: none;
+    background-size: cover;
+    background-repeat: no-repeat;
+    opacity: 0.12;
+    filter: saturate(120%);
+}
+
+body::before {
+    top: -40px;
+    right: -40px;
+    width: 320px;
+    height: 320px;
+    background-image: url('https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?auto=format&fit=crop&w=600&q=80');
+    border-radius: 50%;
+}
+
+body::after {
+    bottom: -60px;
+    left: -40px;
+    width: 360px;
+    height: 260px;
+    background-image: url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=600&q=80');
+    border-radius: 40px;
+}
+
+.container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+}
+
+/* 头部样式 */
+.header {
+    background: #ffffff;
+    padding: 26px 28px;
+    border-radius: 15px;
+    box-shadow: 0 10px 35px rgba(15, 23, 42, 0.12);
+    margin-bottom: 40px;
+    border: 1px solid rgba(203, 213, 225, 0.9);
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 20px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.brand-logo-real {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.35);
+    border: 1px solid rgba(148, 163, 184, 0.5);
+}
+
+.brand-text h1 {
+    color: #111827;
+    font-size: 2.2em;
+    margin-bottom: 4px;
+}
+
+.brand-text p {
+    color: #6b7280;
+    font-size: 0.95em;
+}
+
+.main-nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.nav-link {
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: #4b5563;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-decoration: none;
+}
+
+.nav-link:hover {
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.06);
+}
+
+.nav-link.active {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 8px 22px rgba(37, 99, 235, 0.35);
+}
+
+.search-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#searchInput {
+    flex: 1;
+    padding: 15px 20px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.3s;
+}
+
+#searchInput:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+
+#searchBtn {
+    padding: 15px 30px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #0f766e 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#searchBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.45);
+}
+
+#searchBtn:active {
+    transform: translateY(0);
+}
+
+/* AI建议样式 */
+.ai-status {
+    margin-top: 8px;
+    font-size: 0.85em;
+    color: #6b7280;
+}
+
+.ai-status span {
+    font-weight: 600;
+    color: #2563eb;
+}
+
+.ai-suggestions {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(15, 23, 42, 0.92);
+    border-radius: 10px;
+    border-left: 3px solid #2563eb;
+    display: none;
+}
+
+.ai-suggestions.show {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-suggestions h3 {
+    color: #e5f2ff;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.ai-suggestions p {
+    font-size: 0.9em;
+    color: #e5e7eb;
+    line-height: 1.5;
+}
+
+.suggestion-item {
+    padding: 10px;
+    margin: 5px 0;
+    background: rgba(15, 23, 42, 0.95);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.suggestion-item:hover {
+    background: rgba(31, 41, 55, 0.95);
+    border-color: #2563eb;
+    transform: translateX(5px);
+}
+
+.suggestion-image {
+    flex-shrink: 0;
+}
+
+.suggestion-content {
+    flex: 1;
+}
+
+.suggestion-item .suggestion-title {
+    font-weight: bold;
+    color: #f9fafb;
+    margin-bottom: 5px;
+}
+
+.suggestion-item .suggestion-reason {
+    font-size: 0.9em;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+/* ====== 首页样式 ====== */
+.home-hero {
+    display: none; /* replaced by restaurant-hero on home page */
+}
+
+.home-hero-text {
+    background: radial-gradient(circle at top left, #ffffff 0%, #f3f4ff 55%);
+    border-radius: 15px;
+    padding: 32px 34px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+    border: 1px solid rgba(209, 213, 219, 0.8);
+}
+
+.home-hero-text h2 {
+    font-size: 2.1em;
+    color: #111827;
+    margin-bottom: 10px;
+}
+
+.home-hero-text p {
+    color: #4b5563;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.home-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.primary-btn,
+.secondary-btn {
+    padding: 10px 22px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 600;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #fff;
+    box-shadow: 0 6px 15px rgba(37, 99, 235, 0.4);
+}
+
+.primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.5);
+}
+
+.secondary-btn {
+    background: #e0e7ff;
+    color: #2563eb;
+}
+
+.secondary-btn:hover {
+    background: #c7d2fe;
+}
+
+.btn-sm {
+    padding: 7px 16px;
+    font-size: 0.85em;
+}
+
+.home-highlights {
+    list-style: none;
+    color: #6b7280;
+    font-size: 0.95em;
+    line-height: 1.8;
+}
+
+.home-hero-stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+.stat-card {
+    background: radial-gradient(circle at top, #ffffff 0%, #e5f2ff 70%);
+    border-radius: 15px;
+    padding: 18px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
+    border: 1px solid rgba(209, 213, 219, 0.9);
+}
+
+.stat-label {
+    font-size: 0.9em;
+    color: #6b7280;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.stat-value {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #111827;
+}
+
+.home-recommend {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 26px 28px 30px;
+    box-shadow: 0 16px 36px rgba(15, 23, 42, 0.1);
+    border: 1px solid rgba(209, 213, 219, 0.9);
+}
+
+/* ====== 单一餐厅首页（类似米其林指南风格） ====== */
+.restaurant-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.1fr);
+    gap: 40px;
+    margin-bottom: 40px;
+    align-items: stretch;
+}
+
+.restaurant-hero-image {
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
+    border: 1px solid rgba(15, 23, 42, 0.18);
+    background: #000;
+}
+
+.restaurant-hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scale(1.02);
+    transition: transform 0.7s ease;
+}
+
+.restaurant-hero:hover .restaurant-hero-image img {
+    transform: scale(1.05);
+}
+
+.restaurant-hero-info {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 30px 32px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.15);
+    border: 1px solid rgba(209, 213, 219, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.restaurant-hero-info h2 {
+    font-size: 2em;
+    color: #111827;
+    margin-bottom: 6px;
+}
+
+.restaurant-hero-desc {
+    font-size: 0.98em;
+    color: #4b5563;
+    line-height: 1.7;
+}
+
+.restaurant-meta-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px 18px;
+    padding: 12px 0 4px;
+    border-top: 1px dashed #e5e7eb;
+    border-bottom: 1px dashed #e5e7eb;
+}
+
+.restaurant-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.meta-label {
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #9ca3af;
+}
+
+.meta-value {
+    font-size: 0.92em;
+    color: #111827;
+}
+
+/* 品牌 logo 使用本地图片时的样式钩子 */
+.brand-logo-local {
+    background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80');
+}
+
+.signature-section {
+    margin-top: 24px;
+    margin-bottom: 32px;
+}
+
+.section-header-wide {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.section-header-wide h2 {
+    font-size: 1.7em;
+    color: #111827;
+}
+
+.section-header-wide p {
+    font-size: 0.95em;
+    color: #6b7280;
+    max-width: 420px;
+}
+
+.signature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
+}
+
+.signature-card {
+    background: #ffffff;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+    display: flex;
+    flex-direction: column;
+}
+
+.signature-image-wrap {
+    height: 180px;
+    overflow: hidden;
+}
+
+.signature-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+}
+
+.signature-card:hover .signature-image-wrap img {
+    transform: scale(1.05);
+}
+
+.signature-body {
+    padding: 14px 16px 16px;
+}
+
+.signature-body h3 {
+    font-size: 1.05em;
+    color: #111827;
+    margin-bottom: 6px;
+}
+
+.signature-body p {
+    font-size: 0.9em;
+    color: #4b5563;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.signature-meta {
+    font-size: 0.85em;
+    color: #6b7280;
+}
+
+.story-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 28px;
+    margin-bottom: 36px;
+    align-items: center;
+}
+
+.story-text h2 {
+    font-size: 1.6em;
+    color: #111827;
+    margin-bottom: 10px;
+}
+
+.story-text p {
+    font-size: 0.95em;
+    color: #4b5563;
+    line-height: 1.7;
+    margin-bottom: 8px;
+}
+
+.story-gallery {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.story-gallery img {
+    width: 100%;
+    border-radius: 14px;
+    object-fit: cover;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+}
+
+.home-recommend h3 {
+    font-size: 1.4em;
+    color: #111827;
+    margin-bottom: 16px;
+}
+
+.home-recommend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.home-recommend-card {
+    background: radial-gradient(circle at top left, #ffffff 0%, #e5f2ff 70%);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.home-recommend-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12);
+}
+
+.home-recommend-thumb {
+    width: 68px;
+    height: 68px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid rgba(209, 213, 219, 0.9);
+}
+
+.home-recommend-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.home-recommend-info-title {
+    font-size: 1em;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.home-recommend-info-meta {
+    font-size: 0.9em;
+    color: #6b7280;
+}
+
+/* 首页快速场景 */
+.home-quick-entry {
+    margin-top: 30px;
+}
+
+.home-quick-entry h3 {
+    font-size: 1.4em;
+    color: #111827;
+    margin-bottom: 14px;
+}
+
+.home-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+}
+
+.quick-card {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 18px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s;
+}
+
+.quick-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18);
+    border-color: #2563eb;
+}
+
+.quick-card-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #111827;
+}
+
+.quick-card-desc {
+    font-size: 0.9em;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.quick-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #e5f2ff;
+    color: #2563eb;
+    font-size: 0.8em;
+    font-weight: 500;
+}
+
+/* 首页流程 */
+.home-how {
+    margin-top: 40px;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 22px 26px 22px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.home-how h3 {
+    font-size: 1.4em;
+    color: #111827;
+    margin-bottom: 16px;
+}
+
+.home-how-steps {
+    display: grid;
+    gap: 12px;
+}
+
+.how-step {
+    display: flex;
+    gap: 12px;
+}
+
+.how-index {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: #2563eb;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9em;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.how-title {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 2px;
+}
+
+.how-desc {
+    font-size: 0.9em;
+    color: #6b7280;
+}
+
+/* 首页评价 */
+.home-reviews {
+    margin-top: 32px;
+}
+
+.home-reviews h3 {
+    font-size: 1.4em;
+    color: #111827;
+    margin-bottom: 14px;
+}
+
+.home-review-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.review-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px 18px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+}
+
+.review-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #111827;
+}
+
+.review-content {
+    font-size: 0.9em;
+    color: #4b5563;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.review-meta {
+    font-size: 0.8em;
+    color: #6b7280;
+}
+
+/* 首页业态 */
+.home-partners {
+    margin-top: 32px;
+}
+
+.home-partners h3 {
+    font-size: 1.4em;
+    color: #111827;
+    margin-bottom: 14px;
+}
+
+.partner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.partner-item {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    border: 1px solid #e5e7eb;
+}
+
+.partner-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #e5f2ff;
+    color: #2563eb;
+    font-size: 0.8em;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.partner-item p {
+    font-size: 0.9em;
+    color: #4b5563;
+}
+
+/* 首页底部 */
+.home-footer {
+    margin-top: 40px;
+    padding: 18px 4px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: 0.9em;
+    color: #6b7280;
+}
+
+.footer-brand {
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.footer-links {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.footer-links a {
+    text-decoration: none;
+    color: #4b5563;
+    font-size: 0.9em;
+}
+
+.footer-links a:hover {
+    color: #2563eb;
+}
+
+/* ====== 餐厅浏览 ====== */
+.restaurant-section {
+    margin-bottom: 30px;
+}
+
+.section-header {
+    margin-bottom: 16px;
+}
+
+.section-header h2 {
+    font-size: 1.8em;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.section-subtitle {
+    color: #6b7280;
+    font-size: 0.95em;
+}
+
+.restaurant-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+.restaurant-card {
+    background: #ffffff;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.restaurant-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px rgba(37, 99, 235, 0.15);
+    border-color: #2563eb;
+}
+
+.restaurant-card-img {
+    width: 100%;
+    height: 160px;
+    overflow: hidden;
+}
+
+.restaurant-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.restaurant-card:hover .restaurant-card-img img {
+    transform: scale(1.05);
+}
+
+.restaurant-card-body {
+    padding: 14px 16px 16px;
+}
+
+.restaurant-card-name {
+    font-size: 1.15em;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 6px;
+}
+
+.restaurant-card-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 0.85em;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.restaurant-rating-star {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.restaurant-card-desc {
+    font-size: 0.9em;
+    color: #4b5563;
+    margin-bottom: 8px;
+}
+
+.restaurant-card-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.rest-tag {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e5f2ff;
+    color: #2563eb;
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+.restaurant-card-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8em;
+    color: #9ca3af;
+}
+
+/* ====== 点餐主内容区域 ====== */
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 30px;
+}
+
+/* 菜单区域 */
+.menu-section {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+    border: 1px solid rgba(209, 213, 219, 0.9);
+}
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.menu-section h2 {
+    color: #2563eb;
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+
+.menu-subtitle {
+    font-size: 0.9em;
+    color: #6b7280;
+    max-width: 260px;
+}
+
+.category-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.category-tab {
+    padding: 10px 20px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.category-tab:hover {
+    background: #e5e7eb;
+}
+
+.category-tab.active {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.menu-item {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
+    border-color: #2563eb;
+}
+
+.menu-item-image {
+    width: 100%;
+    height: 180px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 15px;
+}
+
+.menu-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.menu-item-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.menu-item-desc {
+    font-size: 0.9em;
+    color: #6b7280;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.menu-item-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.menu-tag {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: #4b5563;
+    font-size: 0.75em;
+}
+
+.menu-item-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.menu-item-price {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #2563eb;
+}
+
+.menu-item-sales {
+    font-size: 0.8em;
+    color: #9ca3af;
+    margin-left: 8px;
+}
+
+.add-to-cart-btn {
+    padding: 8px 20px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #0f766e 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.add-to-cart-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 26px rgba(37, 99, 235, 0.4);
+}
+
+/* 购物车区域 */
+.cart-section {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+    border: 1px solid rgba(209, 213, 219, 0.9);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+}
+
+.cart-section h2 {
+    color: #2563eb;
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+
+.cart-items {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.empty-cart {
+    text-align: center;
+    color: #9ca3af;
+    padding: 40px 0;
+    font-style: italic;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f9fafb;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.cart-item-info {
+    flex: 1;
+}
+
+.cart-item-name {
+    font-weight: bold;
+    color: #111827;
+    margin-bottom: 5px;
+}
+
+.cart-item-price {
+    color: #2563eb;
+    font-size: 0.9em;
+}
+
+.cart-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quantity-btn {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: #e5e7eb;
+    color: #111827;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.quantity-btn:hover {
+    background: #2563eb;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.quantity {
+    font-weight: bold;
+    min-width: 30px;
+    text-align: center;
+}
+
+.remove-btn {
+    padding: 5px 15px;
+    background: #fee2e2;
+    color: #b91c1c;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+.remove-btn:hover {
+    background: #fecaca;
+}
+
+.cart-summary {
+    border-top: 2px solid #e0e0e0;
+    padding-top: 20px;
+}
+
+.total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #111827;
+    margin-bottom: 20px;
+}
+
+#totalPrice {
+    color: #2563eb;
+}
+
+.checkout-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 60%);
+    color: #ecfdf5;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.checkout-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(22, 163, 74, 0.7);
+}
+
+.checkout-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* ====== 弹窗通用 ====== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.modal-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 28px 32px;
+    width: 90%;
+    max-width: 460px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    animation: modalIn 0.3s ease;
+}
+
+.modal-card-lg {
+    max-width: 560px;
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.modal-header h3 {
+    font-size: 1.4em;
+    color: #111827;
+}
+
+.modal-close-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f3f4f6;
+    border-radius: 999px;
+    font-size: 1.1em;
+    cursor: pointer;
+    color: #6b7280;
+    transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+/* 订单确认弹窗 */
+.confirm-order-body {
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.confirm-label {
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 10px;
+}
+
+.confirm-items-list {
+    margin-bottom: 16px;
+}
+
+.confirm-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.confirm-item-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.confirm-item-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.confirm-item-name {
+    font-size: 0.95em;
+    color: #111827;
+}
+
+.confirm-item-price {
+    font-weight: 600;
+    color: #2563eb;
+}
+
+.confirm-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-top: 2px solid #e5e7eb;
+    font-size: 1.1em;
+    font-weight: 700;
+}
+
+.confirm-total-price {
+    color: #2563eb;
+    font-size: 1.3em;
+}
+
+.confirm-tip {
+    font-size: 0.85em;
+    color: #9ca3af;
+    margin-top: 8px;
+}
+
+/* ====== 登录 & 用户中心 ====== */
+.auth-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 26px;
+}
+
+.auth-card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 26px 32px 28px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+    border: 1px solid rgba(209, 213, 219, 0.9);
+}
+
+.auth-card h2 {
+    color: #111827;
+    font-size: 1.8em;
+    margin-bottom: 6px;
+}
+
+.auth-subtitle {
+    color: #6b7280;
+    font-size: 0.95em;
+    margin-bottom: 18px;
+}
+
+.auth-form .form-group {
+    margin-bottom: 14px;
+}
+
+.auth-form label {
+    display: block;
+    font-size: 0.9em;
+    color: #4b5563;
+    margin-bottom: 6px;
+}
+
+.auth-form input[type="tel"],
+.auth-form input[type="password"],
+.auth-form input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 0.95em;
+    transition: all 0.2s;
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85em;
+    margin: 6px 0 12px;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #6b7280;
+}
+
+.link-btn {
+    border: none;
+    background: none;
+    color: #2563eb;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 2px 4px;
+}
+
+.full-width {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    margin-top: 6px;
+}
+
+.auth-tip {
+    margin-top: 14px;
+    font-size: 0.85em;
+    color: #6b7280;
+    background: #f3f4f6;
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.auth-benefits {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 24px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+    border: 1px solid rgba(209, 213, 219, 0.9);
+}
+
+.auth-benefits h3 {
+    font-size: 1.3em;
+    margin-bottom: 10px;
+}
+
+.auth-benefits ul {
+    list-style: none;
+    color: #4b5563;
+    font-size: 0.95em;
+    line-height: 2;
+}
+
+/* 用户中心（已登录后） */
+.profile-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+    gap: 20px;
+}
+
+.profile-card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 28px;
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.1);
+    border: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+.profile-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 999px;
+    background: #e5f2ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2em;
+    margin: 0 auto 14px;
+}
+
+.profile-info h2 {
+    font-size: 1.5em;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.profile-info p {
+    font-size: 0.9em;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.profile-actions {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.preference-card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 24px 28px;
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.preference-card h3 {
+    font-size: 1.3em;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.pref-subtitle {
+    font-size: 0.9em;
+    color: #6b7280;
+    margin-bottom: 16px;
+}
+
+.pref-group {
+    margin-bottom: 14px;
+}
+
+.pref-label {
+    display: block;
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #4b5563;
+    margin-bottom: 6px;
+}
+
+.pref-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 6px;
+}
+
+.pref-checkbox-grid label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9em;
+    color: #4b5563;
+    cursor: pointer;
+}
+
+.pref-select {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 0.9em;
+    width: 100%;
+    max-width: 200px;
+}
+
+.pref-select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.pref-budget-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pref-input {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 0.9em;
+    width: 100px;
+}
+
+.pref-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.pref-input-wide {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 0.9em;
+    width: 100%;
+}
+
+.pref-input-wide:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* 快捷操作 */
+.profile-quick-links {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.quick-link-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    text-decoration: none;
+    color: #4b5563;
+    transition: all 0.2s;
+    font-size: 0.9em;
+}
+
+.quick-link-card:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+}
+
+.quick-link-icon {
+    font-size: 1.5em;
+}
+
+/* ====== 订单页 ====== */
+.orders-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.orders-page-header h2 {
+    font-size: 1.8em;
+    color: #111827;
+}
+
+.orders-subtitle {
+    font-size: 0.95em;
+    color: #6b7280;
+}
+
+.orders-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.orders-tab {
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #4b5563;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.orders-tab:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.orders-tab.active {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+.orders-list {
+    display: grid;
+    gap: 16px;
+}
+
+.orders-empty {
+    text-align: center;
+    padding: 60px 0;
+    color: #9ca3af;
+}
+
+.orders-empty a {
+    margin-top: 16px;
+}
+
+.order-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 22px 24px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 25px rgba(15, 23, 42, 0.08);
+    transition: box-shadow 0.2s;
+}
+
+.order-card:hover {
+    box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12);
+}
+
+.order-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.order-id {
+    font-weight: 700;
+    color: #111827;
+    font-size: 1em;
+    margin-right: 10px;
+}
+
+.order-date {
+    font-size: 0.85em;
+    color: #9ca3af;
+}
+
+.order-status-badge {
+    padding: 4px 12px;
+    border-radius: 999px;
+    color: #ffffff;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.order-restaurant-name {
+    font-size: 0.9em;
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+.order-card-items {
+    margin-bottom: 14px;
+}
+
+.order-item-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.order-item-row:last-child {
+    border-bottom: none;
+}
+
+.order-item-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.order-item-name {
+    flex: 1;
+    font-size: 0.9em;
+    color: #111827;
+}
+
+.order-item-price {
+    font-size: 0.9em;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+/* 订单进度条 */
+.order-timeline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin: 14px 0;
+    padding: 10px;
+    background: #f9fafb;
+    border-radius: 10px;
+}
+
+.timeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 60px;
+}
+
+.timeline-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #d1d5db;
+    transition: all 0.3s;
+}
+
+.timeline-step.done .timeline-dot {
+    background: #2563eb;
+}
+
+.timeline-step.active .timeline-dot {
+    background: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
+}
+
+.timeline-step span {
+    font-size: 0.7em;
+    color: #9ca3af;
+}
+
+.timeline-step.done span {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+.timeline-line {
+    flex: 1;
+    height: 3px;
+    background: #d1d5db;
+    min-width: 20px;
+    margin-bottom: 18px;
+}
+
+.timeline-line.done {
+    background: #2563eb;
+}
+
+.order-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.order-total {
+    font-size: 1em;
+    color: #4b5563;
+}
+
+.order-total strong {
+    color: #2563eb;
+    font-size: 1.15em;
+}
+
+.order-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.order-rated {
+    font-size: 0.9em;
+    color: #f59e0b;
+    font-weight: 500;
+}
+
+/* ====== 评价弹窗 ====== */
+.star-rating {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.star-rating .star {
+    font-size: 2.2em;
+    color: #d1d5db;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.star-rating .star:hover,
+.star-rating .star.active {
+    color: #f59e0b;
+    transform: scale(1.15);
+}
+
+.rating-text {
+    text-align: center;
+    font-size: 0.9em;
+    color: #6b7280;
+    margin-bottom: 14px;
+}
+
+.review-textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 0.95em;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.review-textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* ====== 商家中心 ====== */
+.merchant-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.merchant-subtitle {
+    color: #6b7280;
+    font-size: 0.95em;
+}
+
+.merchant-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.merchant-card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 20px 22px;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+    border: 1px solid rgba(209, 213, 219, 0.9);
+}
+
+.merchant-card-full {
+    grid-column: 1 / -1;
+}
+
+.merchant-card h3 {
+    font-size: 1.2em;
+    margin-bottom: 14px;
+    color: #111827;
+}
+
+.merchant-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.stat-item {
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.merchant-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+}
+
+.merchant-table th,
+.merchant-table td {
+    padding: 8px 6px;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+}
+
+.merchant-table th {
+    color: #4b5563;
+    font-weight: 600;
+}
+
+.merchant-menu-tools {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.merchant-menu-tools input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 0.9em;
+}
+
+.merchant-menu-tools input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* 上架菜品折叠 */
+.add-dish-details {
+    margin-bottom: 16px;
+}
+
+.add-dish-summary {
+    cursor: pointer;
+    padding: 10px 14px;
+    background: #e5f2ff;
+    color: #2563eb;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95em;
+    transition: all 0.2s;
+    list-style: none;
+}
+
+.add-dish-summary::-webkit-details-marker {
+    display: none;
+}
+
+.add-dish-summary:hover {
+    background: #c7d2fe;
+}
+
+.merchant-add-form {
+    border-top: 1px dashed #e5e7eb;
+    padding-top: 14px;
+}
+
+.pref-display-value {
+    background-color: #374151;
+    color: #e5e7eb;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.secondary-btn {
+    background-color: #374151;
+    color: #e5e7eb;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.secondary-btn:hover {
+    background-color: #4b5563;
+}
+
+/* Merchant Dashboard Styles */
+.merchant-header {
+    margin-bottom: 24px;
+}
+
+.merchant-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #111827;
+}
+
+.merchant-subtitle {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.merchant-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.merchant-card {
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.merchant-card-full {
+    grid-column: 1 / -1;
+}
+
+.merchant-card h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #111827;
+}
+
+.merchant-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-label {
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    color: #111827;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.merchant-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.merchant-table th,
+.merchant-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.merchant-table th {
+    color: #6b7280;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.merchant-table td {
+    color: #111827;
+}
+
+.merchant-menu-tools {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.merchant-menu-tools input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background-color: white;
+    color: #111827;
+    font-size: 14px;
+}
+
+.merchant-menu-tools input::placeholder {
+    color: #9ca3af;
+}
+
+.primary-btn.btn-sm {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.merchant-menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.merchant-menu-item-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.merchant-add-form {
+    padding: 16px;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.merchant-add-form h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 4px;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.merchant-menu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.merchant-menu-item:hover {
+    background-color: #f3f4f6;
+}
+
+.merchant-menu-item-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.merchant-item-thumb {
+    width: 40px;
+    height: 40px;
+    background-color: #f3f4f6;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.merchant-item-name {
+    font-weight: 500;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.merchant-item-desc {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.merchant-menu-item-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.merchant-item-price {
+    font-weight: 500;
+    color: #111827;
+}
+
+.merchant-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-edit,
+.btn-delete {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-edit {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #2563eb;
+}
+
+.btn-delete {
+    background-color: #ef4444;
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #dc2626;
+}
