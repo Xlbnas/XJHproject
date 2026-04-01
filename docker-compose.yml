@@ -6,11 +6,11 @@ services:
     ports:
       - "964:964"
     environment:
-      - NODE_ENV=production
+      - PYTHONUNBUFFERED=1
     volumes:
-      - ./backend:/app/backend
-      - backend_node_modules:/app/backend/node_modules
-    command: npm start
+      # 挂载数据目录以持久化 SQLite 数据库
+      - ./backend/data:/app/backend/data
+    command: uvicorn app.main:app --host 0.0.0.0 --port 964 --reload
 
   frontend:
     build:
@@ -22,7 +22,3 @@ services:
       - NODE_ENV=production
     depends_on:
       - backend
-
-volumes:
-  backend_node_modules:
-  frontend_node_modules:
