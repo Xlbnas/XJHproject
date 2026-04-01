@@ -30,6 +30,22 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Smart Order System Backend',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      menu: '/api/menu',
+      recommendations: '/api/recommendations/recommend',
+      auth: '/api/auth',
+      orders: '/api/orders'
+    }
+  });
+});
+
 // Register routes
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
