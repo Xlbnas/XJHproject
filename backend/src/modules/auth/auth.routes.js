@@ -14,30 +14,25 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'phone and password required' });
     }
     const hashed = await hashPassword(password);
-    
+
     const db = dbModule.getDb();
     if (!db) {
       return res.status(500).json({ message: 'Database not initialized' });
     }
-    
+
     try {
       // 插入用户
-      db.run('INSERT INTO users (phone, password_hash, nickname) VALUES (?, ?, ?)', [phone, hashed, nickname || null]);
-      
+      const result = db.prepare('INSERT INTO users (phone, password_hash, nickname) VALUES (?, ?, ?)')
+        .run(phone, hashed, nickname || null);
+
       // 获取插入的用户
-      const result = db.exec('SELECT id, phone, nickname, created_at FROM users WHERE phone = ?', [phone]);
-      if (result.length === 0 || result[0].values.length === 0) {
+      const user = db.prepare('SELECT id, phone, nickname, created_at FROM users WHERE id = ?')
+        .get(result.lastInsertRowid);
+
+      if (!user) {
         return res.status(500).json({ message: 'Register failed' });
       }
-      
-      const userData = result[0].values[0];
-      const user = {
-        id: userData[0],
-        phone: userData[1],
-        nickname: userData[2],
-        created_at: userData[3]
-      };
-      
+
       const token = signToken({ id: user.id, phone: user.phone });
       res.json({ user, token });
     } catch (err) {
@@ -60,25 +55,18 @@ router.post('/login', async (req, res) => {
     if (!phone || !password) {
       return res.status(400).json({ message: 'phone and password required' });
     }
-    
+
     const db = dbModule.getDb();
     if (!db) {
       return res.status(500).json({ message: 'Database not initialized' });
     }
-    
-    const result = db.exec('SELECT id, phone, nickname, password_hash, created_at FROM users WHERE phone = ?', [phone]);
-    if (result.length === 0 || result[0].values.length === 0) {
+
+    const user = db.prepare('SELECT id, phone, nickname, password_hash, created_at FROM users WHERE phone = ?')
+      .get(phone);
+
+    if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-    
-    const userData = result[0].values[0];
-    const user = {
-      id: userData[0],
-      phone: userData[1],
-      nickname: userData[2],
-      password_hash: userData[3],
-      created_at: userData[4]
-    };
 
     const ok = await comparePassword(password, user.password_hash);
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
@@ -99,20 +87,14 @@ router.get('/me', authRequired, (req, res) => {
     if (!db) {
       return res.status(500).json({ message: 'Database not initialized' });
     }
-    
-    const result = db.exec('SELECT id, phone, nickname, created_at FROM users WHERE id = ?', [req.user.id]);
-    if (result.length === 0 || result[0].values.length === 0) {
+
+    const user = db.prepare('SELECT id, phone, nickname, created_at FROM users WHERE id = ?')
+      .get(req.user.id);
+
+    if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
-    const userData = result[0].values[0];
-    const user = {
-      id: userData[0],
-      phone: userData[1],
-      nickname: userData[2],
-      created_at: userData[3]
-    };
-    
+
     res.json({ user });
   } catch (e) {
     console.error(e);

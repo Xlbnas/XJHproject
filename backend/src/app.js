@@ -56,14 +56,12 @@ app.use('/api/recommendations', recommendationRoutes);
 app.get('/api/menu', (req, res) => {
   try {
     const db = dbModule.getDb();
-    const stmt = db.prepare(`
-      SELECT id, name, category, price, desc, image, tags, sales 
+    const rows = db.prepare(`
+      SELECT id, name, category, price, desc, image, tags, sales
       FROM menu_items
-    `);
-    
-    const menuData = [];
-    while (stmt.step()) {
-      const row = stmt.getAsObject();
+    `).all();
+
+    const menuData = rows.map(row => {
       // 为不同类别的菜品使用不同的有效图片链接
       let imageUrl = row.image;
       if (!imageUrl || imageUrl.includes('1563245372-f7216b524901')) {
@@ -86,7 +84,7 @@ app.get('/api/menu', (req, res) => {
             break;
           case 'Rice & Noodles':
             if (row.name.includes('Rice')) {
-              imageUrl = 'https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=800&q=80';
+              imageUrl = 'https://images.unsplash.com/photo-1529042410759-bff31c812dba?auto=format&fit=crop&w=800&q=80';
             } else {
               imageUrl = 'https://images.unsplash.com/photo-1563379617071-fb1a474b23d3?auto=format&fit=crop&w=800&q=80';
             }
@@ -125,14 +123,14 @@ app.get('/api/menu', (req, res) => {
             imageUrl = 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=800&q=80';
         }
       }
-      
-      menuData.push({
+
+      return {
         ...row,
         image: imageUrl,
         tags: row.tags ? row.tags.split(',') : []
-      });
-    }
-    
+      };
+    });
+
     res.json(menuData);
   } catch (error) {
     console.error('Menu API error:', error);
@@ -152,31 +150,17 @@ app.post('/api/menu', (req, res) => {
 
     const tagsString = tags ? tags.join(',') : '';
 
-    db.run(
-      'INSERT INTO menu_items (name, category, price, desc, image, tags, sales) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [name, category || 'Mains', price, desc || '', image || '', tagsString, 0],
-      function(err) {
-        if (err) {
-          console.error('Error adding menu item:', err);
-          return res.status(500).json({ error: 'Failed to add menu item' });
-        }
+    const result = db.prepare(
+      'INSERT INTO menu_items (name, category, price, desc, image, tags, sales) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(name, category || 'Mains', price, desc || '', image || '', tagsString, 0);
 
-        // Get the newly added item
-        const stmt = db.prepare('SELECT * FROM menu_items WHERE id = ?');
-        stmt.bind([this.lastID]);
-        if (stmt.step()) {
-          const newItem = stmt.getAsObject();
-          // 立即保存数据库到文件
-          dbModule.saveDatabase && dbModule.saveDatabase();
-          res.status(201).json({
-            ...newItem,
-            tags: newItem.tags ? newItem.tags.split(',') : []
-          });
-        } else {
-          res.status(500).json({ error: 'Failed to retrieve newly added item' });
-        }
-      }
-    );
+    // Get the newly added item
+    const newItem = db.prepare('SELECT * FROM menu_items WHERE id = ?').get(result.lastInsertRowid);
+
+    res.status(201).json({
+      ...newItem,
+      tags: newItem.tags ? newItem.tags.split(',') : []
+    });
   } catch (error) {
     console.error('Add menu item error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -189,40 +173,28 @@ app.put('/api/menu/:id', (req, res) => {
     const db = dbModule.getDb();
     const { id } = req.params;
     const { name, price, desc, category, image, tags } = req.body;
-    
+
     if (!name || !price) {
       return res.status(400).json({ error: 'Name and price are required' });
     }
-    
+
     const tagsString = tags ? tags.join(',') : '';
-    
-    db.run(
-      'UPDATE menu_items SET name = ?, category = ?, price = ?, desc = ?, image = ?, tags = ? WHERE id = ?',
-      [name, category || 'Mains', price, desc || '', image || '', tagsString, id],
-      function(err) {
-        if (err) {
-          console.error('Error updating menu item:', err);
-          return res.status(500).json({ error: 'Failed to update menu item' });
-        }
-        
-        if (this.changes === 0) {
-          return res.status(404).json({ error: 'Menu item not found' });
-        }
-        
-        // Get the updated item
-        const stmt = db.prepare('SELECT * FROM menu_items WHERE id = ?');
-        stmt.bind([id]);
-        if (stmt.step()) {
-          const updatedItem = stmt.getAsObject();
-          res.json({
-            ...updatedItem,
-            tags: updatedItem.tags ? updatedItem.tags.split(',') : []
-          });
-        } else {
-          res.status(500).json({ error: 'Failed to retrieve updated item' });
-        }
-      }
-    );
+
+    const result = db.prepare(
+      'UPDATE menu_items SET name = ?, category = ?, price = ?, desc = ?, image = ?, tags = ? WHERE id = ?'
+    ).run(name, category || 'Mains', price, desc || '', image || '', tagsString, id);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Menu item not found' });
+    }
+
+    // Get the updated item
+    const updatedItem = db.prepare('SELECT * FROM menu_items WHERE id = ?').get(id);
+
+    res.json({
+      ...updatedItem,
+      tags: updatedItem.tags ? updatedItem.tags.split(',') : []
+    });
   } catch (error) {
     console.error('Update menu item error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -234,19 +206,14 @@ app.delete('/api/menu/:id', (req, res) => {
   try {
     const db = dbModule.getDb();
     const { id } = req.params;
-    
-    db.run('DELETE FROM menu_items WHERE id = ?', [id], function(err) {
-      if (err) {
-        console.error('Error deleting menu item:', err);
-        return res.status(500).json({ error: 'Failed to delete menu item' });
-      }
-      
-      if (this.changes === 0) {
-        return res.status(404).json({ error: 'Menu item not found' });
-      }
-      
-      res.json({ message: 'Menu item deleted successfully' });
-    });
+
+    const result = db.prepare('DELETE FROM menu_items WHERE id = ?').run(id);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Menu item not found' });
+    }
+
+    res.json({ message: 'Menu item deleted successfully' });
   } catch (error) {
     console.error('Delete menu item error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -256,7 +223,7 @@ app.delete('/api/menu/:id', (req, res) => {
 // Socket.io events
 io.on('connection', (socket) => {
   console.log('A user connected');
-  
+
   socket.on('disconnect', () => {
     console.log('User disconnected');
   });
@@ -265,69 +232,8 @@ io.on('connection', (socket) => {
 // Set io as global variable for routes to use
 global.io = io;
 
-// ---- Minimal DB bootstrap (makes local setup smoother) ----
-function initDb() {
-  const db = dbModule.getDb();
-  if (!db) {
-    console.error('Database not initialized');
-    return;
-  }
-
-  // users: created by registration/login, ensure baseline columns exist
-  // 注意：不要执行 DROP TABLE，否则会丢失数据
-  db.run(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      phone TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      nickname TEXT,
-      role TEXT DEFAULT 'user',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
-
-  // orders
-  db.run(`
-    CREATE TABLE IF NOT EXISTS orders (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      order_no VARCHAR(32) UNIQUE NOT NULL,
-      user_id INTEGER REFERENCES users(id),
-      total_price REAL NOT NULL,
-      status VARCHAR(20) NOT NULL DEFAULT 'pending',
-      restaurant TEXT DEFAULT 'Maison Lumière',
-      rating INTEGER DEFAULT 0,
-      review TEXT DEFAULT '',
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
-
-  // order_items
-  db.run(`
-    CREATE TABLE IF NOT EXISTS order_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
-      menu_item_id INTEGER,
-      name VARCHAR(100) NOT NULL,
-      price REAL NOT NULL,
-      quantity INTEGER NOT NULL
-    );
-  `);
-
-  // 创建管理员账户
-  try {
-    const hashedPassword = bcrypt.hashSync('Xlbnas', 10);
-    db.run('INSERT OR IGNORE INTO users (phone, password_hash, role) VALUES (?, ?, ?)', ['Xlbnas', hashedPassword, 'admin']);
-    console.log('Admin account created or already exists');
-  } catch (err) {
-    console.error('Error creating admin account:', err);
-  }
-}
-
-// 等待数据库初始化完成后启动服务器
-setTimeout(() => {
-  initDb();
-  const port = process.env.PORT || 964;
-  server.listen(port, '0.0.0.0', () => {
-    console.log(`Backend running on http://localhost:${port}`);
-  });
-}, 2000);
+// 启动服务器
+const port = process.env.PORT || 964;
+server.listen(port, '0.0.0.0', () => {
+  console.log(`Backend running on http://localhost:${port}`);
+});

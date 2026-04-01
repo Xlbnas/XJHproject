@@ -29,21 +29,18 @@ router.post('/', authRequired, (req, res) => {
     }
 
     // 插入订单
-    db.run('INSERT INTO orders (order_no, user_id, total_price, status) VALUES (?, ?, ?, ?)', [orderNo, req.user.id, total, 'pending']);
-    
-    // 获取插入的订单ID
-    const orderResult = db.exec('SELECT id FROM orders WHERE order_no = ?', [orderNo]);
-    if (orderResult.length === 0 || orderResult[0].values.length === 0) {
-      return res.status(500).json({ message: 'Create order failed' });
-    }
-    
-    const orderId = orderResult[0].values[0][0];
-    
+    const orderResult = db.prepare(
+      'INSERT INTO orders (order_no, user_id, total_price, status) VALUES (?, ?, ?, ?)'
+    ).run(orderNo, req.user.id, total, 'pending');
+
+    const orderId = orderResult.lastInsertRowid;
+
     // 插入订单项
+    const insertItem = db.prepare('INSERT INTO order_items (order_id, name, price, quantity) VALUES (?, ?, ?, ?)');
     for (const it of items) {
-      db.run('INSERT INTO order_items (order_id, name, price, quantity) VALUES (?, ?, ?, ?)', [orderId, it.name, it.price, it.quantity]);
+      insertItem.run(orderId, it.name, it.price, it.quantity);
     }
-    
+
     // Emit order created event
     global.io.emit('order:created', { order_no: orderNo, status: 'pending' });
 
@@ -60,33 +57,20 @@ router.get('/', authRequired, (req, res) => {
     const { status } = req.query;
     let sql = 'SELECT * FROM orders WHERE user_id = ?';
     let params = [req.user.id];
-    
+
     if (status) {
       sql += ' AND status = ?';
       params.push(status);
     }
     sql += ' ORDER BY created_at DESC';
-    
+
     const db = dbModule.getDb();
     if (!db) {
       return res.status(500).json({ message: 'Database not initialized' });
     }
-    
-    const result = db.exec(sql, params);
-    if (result.length === 0) {
-      return res.json({ orders: [] });
-    }
-    
-    const columns = result[0].columns;
-    const rows = result[0].values;
-    const orders = rows.map(row => {
-      const order = {};
-      columns.forEach((column, index) => {
-        order[column] = row[index];
-      });
-      return order;
-    });
-    
+
+    const orders = db.prepare(sql).all(...params);
+
     res.json({ orders });
   } catch (e) {
     console.error(e);
@@ -103,21 +87,20 @@ router.patch('/:orderNo/status', authRequired, (req, res) => {
     if (!orderNo || !status || !allowed.includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
-    
+
     const db = dbModule.getDb();
     if (!db) {
       return res.status(500).json({ message: 'Database not initialized' });
     }
-    
+
     // 执行更新
-    db.run('UPDATE orders SET status = ? WHERE order_no = ? AND user_id = ?', [status, orderNo, req.user.id]);
-    
-    // 检查是否有记录被更新
-    const result = db.exec('SELECT id FROM orders WHERE order_no = ? AND user_id = ? AND status = ?', [orderNo, req.user.id, status]);
-    if (result.length === 0 || result[0].values.length === 0) {
+    const result = db.prepare('UPDATE orders SET status = ? WHERE order_no = ? AND user_id = ?')
+      .run(status, orderNo, req.user.id);
+
+    if (result.changes === 0) {
       return res.status(404).json({ message: 'Order not found' });
     }
-    
+
     // Emit order status updated event
     global.io.emit('order:statusUpdated', { order_no: orderNo, status });
 
@@ -142,16 +125,15 @@ router.post('/:orderNo/review', authRequired, (req, res) => {
     if (!db) {
       return res.status(500).json({ message: 'Database not initialized' });
     }
-    
+
     // 执行更新
-    db.run('UPDATE orders SET rating = ?, review = ? WHERE order_no = ? AND user_id = ?', [r, comment || '', orderNo, req.user.id]);
-    
-    // 检查是否有记录被更新
-    const result = db.exec('SELECT id FROM orders WHERE order_no = ? AND user_id = ? AND rating = ?', [orderNo, req.user.id, r]);
-    if (result.length === 0 || result[0].values.length === 0) {
+    const result = db.prepare('UPDATE orders SET rating = ?, review = ? WHERE order_no = ? AND user_id = ?')
+      .run(r, comment || '', orderNo, req.user.id);
+
+    if (result.changes === 0) {
       return res.status(404).json({ message: 'Order not found' });
     }
-    
+
     res.json({ order_no: orderNo, rating: r });
   } catch (e) {
     console.error(e);
