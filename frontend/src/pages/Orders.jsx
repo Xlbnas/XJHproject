@@ -4,15 +4,15 @@ import AuthContext from '../context/AuthContext';
 import io from 'socket.io-client';
 
 const Orders = () => {
-  const { currentUser } = useContext(AuthContext);
+  const { currentUser, loading } = useContext(AuthContext);
   const [orders, setOrders] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
 
   useEffect(() => {
-    if (currentUser) {
+    if (!loading && currentUser) {
       fetchOrders();
     }
-  }, [currentUser, selectedFilter]);
+  }, [currentUser, loading, selectedFilter]);
 
   useEffect(() => {
     // 初始化WebSocket连接
@@ -93,6 +93,23 @@ const Orders = () => {
     // 这里可以实现重新下单功能
     console.log('Reorder:', order);
   };
+
+  if (loading) {
+    return (
+      <div className="orders-empty">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="orders-empty">
+        <p>Please login to view your orders</p>
+        <a href="/login" className="primary-btn">Login</a>
+      </div>
+    );
+  }
 
   return (
     <div>

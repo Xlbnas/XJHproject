@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (phone, password) => {
+    setLoading(true);
     try {
       const response = await axios.post('http://localhost:964/api/auth/login', {
         phone,
@@ -44,10 +45,13 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       return { success: false, message: error.response?.data?.message || 'Login failed' };
+    } finally {
+      setLoading(false);
     }
   };
 
   const register = async (phone, password, nickname) => {
+    setLoading(true);
     try {
       const response = await axios.post('http://localhost:964/api/auth/register', {
         phone,
@@ -60,6 +64,8 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       return { success: false, message: error.response?.data?.message || 'Register failed' };
+    } finally {
+      setLoading(false);
     }
   };
 
