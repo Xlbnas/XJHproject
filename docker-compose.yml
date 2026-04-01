@@ -8,6 +8,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - API_KEY=${API_KEY}
+    env_file:
+      - ./backend/.env
     volumes:
       # 挂载数据目录以持久化 SQLite 数据库
       - ./backend/data:/app/backend/data

@@ -50,13 +50,28 @@ npm run dev
 
 #### 后端
 
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 964
-```
+1. **配置环境变量**
 
-后端将在 http://localhost:964 运行。
+   创建 `.env` 文件在 `backend/` 目录下：
+
+   ```bash
+   cd backend
+   echo "API_KEY=your_siliconflow_api_key_here" > .env
+   ```
+
+   获取 API Key：
+   - 访问 [硅基流动](https://siliconflow.cn/)
+   - 注册账号并创建 API Key
+   - 将 API Key 填入 `.env` 文件
+
+2. **安装依赖并启动**
+
+   ```bash
+   pip install -r requirements.txt
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 964
+   ```
+
+   后端将在 http://localhost:964 运行。
 
 ## 项目结构
 
@@ -211,17 +226,39 @@ smart-order-system/
 
 #### 获取推荐
 - **端点**：`GET /api/recommendations/recommend`
-- **参数**：`query` - 搜索关键词
+- **参数**：
+  - `query` - 搜索关键词（必填）
+  - `mode` - 搜索模式：`ai` 或 `regular`（可选，默认 `ai`）
 - **返回**：推荐的菜品列表，包含推荐理由
+
+**示例请求**：
+```bash
+# AI 搜索（使用硅基流动大模型）
+curl "http://localhost:964/api/recommendations/recommend?query=spicy%20chicken&mode=ai"
+
+# Regular 搜索（本地关键词匹配）
+curl "http://localhost:964/api/recommendations/recommend?query=chicken&mode=regular"
+```
 
 ## AI搜索功能详解
 
 ### 搜索模式
 
-#### 本地AI搜索
-- **描述**：使用本地算法理解自然语言查询并提供相关推荐
+#### AI Search（智能搜索）
+- **描述**：使用硅基流动（SiliconFlow）大模型 API 进行智能推荐
+- **模型**：`Pro/deepseek-ai/DeepSeek-V3`
 - **特点**：
-  - 自然语言理解
+  - 深度理解用户意图
+  - 语义匹配而非简单关键词匹配
+  - 支持复杂查询（如 "适合辣食爱好者的鸡肉菜品"）
+- **配置要求**：需要在 `.env` 文件中配置 `API_KEY`
+
+#### Regular Search（常规搜索）
+- **描述**：使用本地关键词匹配算法
+- **特点**：
+  - 快速响应
+  - 基于菜品名称、描述、标签的关键词匹配
+  - 无需外部 API
   - 上下文感知推荐
   - 智能关键词提取
 - **工作原理**：

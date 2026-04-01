@@ -123,9 +123,9 @@ const Order = () => {
         setIsSwitchingSearch(false);
         setShowSuggestions(false); // 先隐藏推荐，避免闪烁
         
-        // 调用后端推荐API
+        // 调用后端推荐API - AI模式
         const response = await axios.get('http://localhost:964/api/recommendations/recommend', {
-          params: { query: searchQuery }
+          params: { query: searchQuery, mode: 'ai' }
         });
         
         const suggestions = response.data.suggestions;
