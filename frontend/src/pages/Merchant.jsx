@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Merchant = () => {
   const [menuData, setMenuData] = useState([]);
@@ -17,31 +18,33 @@ const Merchant = () => {
     image: ''
   });
 
+  // 从后端获取菜单数据
+  const fetchMenuData = async () => {
+    try {
+      const response = await axios.get('http://localhost:964/api/menu');
+      setMenuData(response.data);
+      // 缓存到本地存储
+      localStorage.setItem('menu_data', JSON.stringify(response.data));
+    } catch (error) {
+      console.error('Error fetching menu data:', error);
+      // 失败时使用本地存储的缓存数据
+      const savedMenuData = localStorage.getItem('menu_data');
+      if (savedMenuData) {
+        setMenuData(JSON.parse(savedMenuData));
+      } else {
+        // 最后使用默认数据
+        const defaultMenuData = [
+          { id: 1, name: 'Kung Pao Chicken', category: 'Mains', price: 38, desc: 'Classic Sichuan dish — tender chicken with crunchy peanuts', image: 'https://images.unsplash.com/photo-1604908176997-1251884b08a5?auto=format&fit=crop&w=800&q=80', tags: ['Spicy', 'Sichuan', 'Chicken', 'Hearty'], sales: 186, rating: '98.5%' },
+          { id: 2, name: 'Mapo Tofu', category: 'Mains', price: 28, desc: 'Silky tofu with spicy minced meat — perfect with rice', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80', tags: ['Spicy', 'Sichuan', 'Tofu', 'Vegetarian'], sales: 152, rating: '96.2%' }
+        ];
+        setMenuData(defaultMenuData);
+        localStorage.setItem('menu_data', JSON.stringify(defaultMenuData));
+      }
+    }
+  };
+
   useEffect(() => {
-    // 使用与Order页面相同的菜单数据
-    const mockMenuData = [
-      { id: 1, name: 'Kung Pao Chicken', category: 'Mains', price: 38, desc: 'Classic Sichuan dish — tender chicken with crunchy peanuts', image: 'https://images.unsplash.com/photo-1604908176997-1251884b08a5?auto=format&fit=crop&w=800&q=80', tags: ['Spicy', 'Sichuan', 'Chicken', 'Hearty'], sales: 186, rating: '98.5%' },
-      { id: 2, name: 'Mapo Tofu', category: 'Mains', price: 28, desc: 'Silky tofu with spicy minced meat — perfect with rice', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80', tags: ['Spicy', 'Sichuan', 'Tofu', 'Vegetarian'], sales: 152, rating: '96.2%' },
-      { id: 3, name: 'Sweet & Sour Pork', category: 'Mains', price: 42, desc: 'Tangy and sweet, crispy outside, tender inside', image: 'https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?auto=format&fit=crop&w=800&q=80', tags: ['Sweet & Sour', 'Pork', 'Classic'], sales: 134, rating: '94.8%' },
-      { id: 4, name: 'Braised Pork Belly', category: 'Mains', price: 48, desc: 'Rich but not greasy, melts in your mouth', image: 'https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?auto=format&fit=crop&w=800&q=80', tags: ['Pork', 'Classic', 'Hearty'], sales: 167, rating: '97.3%' },
-      { id: 5, name: 'Steamed Sea Bass', category: 'Mains', price: 58, desc: 'Delicate, fresh, and nutritious', image: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80', tags: ['Light', 'Seafood', 'Healthy'], sales: 98, rating: '95.6%' },
-      { id: 6, name: 'Garlic Broccoli', category: 'Mains', price: 22, desc: 'Fresh and healthy, packed with nutrients', image: 'https://images.unsplash.com/photo-1505575967455-40e256f73376?auto=format&fit=crop&w=800&q=80', tags: ['Light', 'Vegetarian', 'Healthy'], sales: 121, rating: '93.1%' },
-      { id: 7, name: 'Boiled Fish in Chili Oil', category: 'Mains', price: 52, desc: 'Fiery and aromatic, silky tender fish', image: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=800&q=80', tags: ['Spicy', 'Sichuan', 'Seafood'], sales: 143, rating: '96.8%' },
-      { id: 8, name: 'Yu Xiang Shredded Pork', category: 'Mains', price: 35, desc: 'Sweet, sour & mildly spicy — a Sichuan classic', image: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=800&q=80', tags: ['Sweet & Sour', 'Sichuan', 'Pork'], sales: 128, rating: '95.2%' },
-      { id: 9, name: 'Fried Chicken Wings', category: 'Sides', price: 32, desc: 'Golden crispy outside, juicy inside', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80', tags: ['Fried', 'Chicken', 'Snack'], sales: 156, rating: '94.5%' },
-      { id: 10, name: 'Spring Rolls', category: 'Sides', price: 18, desc: 'Crispy shell, savory filling', image: 'https://images.unsplash.com/photo-1455853739633-8c94c03d8127?auto=format&fit=crop&w=800&q=80', tags: ['Fried', 'Vegetarian', 'Snack'], sales: 98, rating: '93.8%' },
-      { id: 11, name: 'Soup Dumplings', category: 'Sides', price: 28, desc: 'Thin wrapper, generous filling, rich broth', image: 'https://images.unsplash.com/photo-1466637574441-749b8f19452f?auto=format&fit=crop&w=800&q=80', tags: ['Classic', 'Snack', 'Pork'], sales: 187, rating: '97.5%' },
-      { id: 12, name: 'Pan-Fried Dumplings', category: 'Sides', price: 24, desc: 'Golden bottom, loaded with filling', image: 'https://images.unsplash.com/photo-1541450864946-90cbb9c0e7c7?auto=format&fit=crop&w=800&q=80', tags: ['Pan-Fried', 'Snack', 'Classic'], sales: 134, rating: '94.2%' },
-      { id: 13, name: 'Cola', category: 'Drinks', price: 8, desc: 'Ice-cold cola, crisp and refreshing', image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80', tags: ['Carbonated', 'Cold', 'Classic'], sales: 234, rating: '92.5%' },
-      { id: 14, name: 'Lemon Honey Tea', category: 'Drinks', price: 15, desc: 'Sweet & tangy, soothes the throat', image: 'https://images.unsplash.com/photo-1509043759401-136742328bb3?auto=format&fit=crop&w=800&q=80', tags: ['Tea', 'Healthy', 'Sweet & Sour'], sales: 112, rating: '93.6%' },
-      { id: 15, name: 'Fresh Orange Juice', category: 'Drinks', price: 18, desc: 'Freshly squeezed, rich in Vitamin C', image: 'https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&w=800&q=80', tags: ['Juice', 'Healthy', 'Vitamin C'], sales: 98, rating: '94.8%' },
-      { id: 16, name: 'Milk Tea', category: 'Drinks', price: 20, desc: 'Rich and silky, perfectly sweetened', image: 'https://images.unsplash.com/photo-1577803645773-f96470509666?auto=format&fit=crop&w=800&q=80', tags: ['Tea', 'Classic', 'Sweet'], sales: 189, rating: '95.9%' },
-      { id: 17, name: 'Tiramisu', category: 'Desserts', price: 35, desc: 'Italian classic, layers of rich flavor', image: 'https://images.unsplash.com/photo-1601972599720-36938d4ecd31?auto=format&fit=crop&w=800&q=80', tags: ['Sweet', 'Classic', 'Italian'], sales: 123, rating: '96.4%' },
-      { id: 18, name: 'Mango Pudding', category: 'Desserts', price: 22, desc: 'Bouncy and smooth, sweet mango flavor', image: 'https://images.unsplash.com/photo-1525253086316-d0c936c814f8?auto=format&fit=crop&w=800&q=80', tags: ['Sweet', 'Fruit', 'Chewy'], sales: 98, rating: '93.2%' },
-      { id: 19, name: 'Red Bean Paste', category: 'Desserts', price: 18, desc: 'Sweet and soft, traditional classic', image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80', tags: ['Sweet', 'Traditional', 'Red Bean'], sales: 76, rating: '92.8%' },
-      { id: 20, name: 'Ice Cream', category: 'Desserts', price: 15, desc: 'Cool and sweet, multiple flavors', image: 'https://images.unsplash.com/photo-1570197571499-166b36435e9f?auto=format&fit=crop&w=800&q=80', tags: ['Icy', 'Sweet', 'Classic'], sales: 156, rating: '94.7%' }
-    ];
-    setMenuData(mockMenuData);
+    fetchMenuData();
 
     // 模拟订单统计数据
     setOrderStats({
@@ -51,6 +54,59 @@ const Merchant = () => {
     });
   }, []);
 
+  // 同步菜单数据到后端
+  const syncMenuData = async (updatedMenu) => {
+    try {
+      // 先更新本地存储
+      localStorage.setItem('menu_data', JSON.stringify(updatedMenu));
+      console.log('Menu data synced to localStorage');
+    } catch (error) {
+      console.error('Error syncing menu data to localStorage:', error);
+    }
+  };
+
+  // 添加菜品到后端
+  const addItemToBackend = async (item) => {
+    try {
+      const response = await axios.post('http://localhost:964/api/menu', item);
+      console.log('Item added to backend:', response.data);
+      // 确保返回的数据包含必要的字段
+      return {
+        ...response.data,
+        sales: response.data.sales || 0,
+        rating: '0%',
+        tags: response.data.tags || []
+      };
+    } catch (error) {
+      console.error('Error adding item to backend:', error);
+      return null;
+    }
+  };
+
+  // 更新菜品到后端
+  const updateItemToBackend = async (item) => {
+    try {
+      const response = await axios.put(`http://localhost:964/api/menu/${item.id}`, item);
+      console.log('Item updated in backend:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating item in backend:', error);
+      return null;
+    }
+  };
+
+  // 从后端删除菜品
+  const deleteItemFromBackend = async (id) => {
+    try {
+      const response = await axios.delete(`http://localhost:964/api/menu/${id}`);
+      console.log('Item deleted from backend:', response.data);
+      return true;
+    } catch (error) {
+      console.error('Error deleting item from backend:', error);
+      return false;
+    }
+  };
+
   // 编辑菜品
   const handleEdit = (item) => {
     setEditingItemId(item.id);
@@ -58,48 +114,57 @@ const Merchant = () => {
   };
 
   // 保存编辑
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingItem) return;
+    
+    // 调用后端API更新菜品
+    await updateItemToBackend(editingItem);
     
     const updatedMenu = menuData.map(item => 
       item.id === editingItem.id ? editingItem : item
     );
     setMenuData(updatedMenu);
-    localStorage.setItem('menu_data', JSON.stringify(updatedMenu));
+    syncMenuData(updatedMenu);
     setEditingItemId(null);
     setEditingItem(null);
   };
 
   // 删除菜品
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
+      // 调用后端API删除菜品
+      await deleteItemFromBackend(id);
+      
       const updatedMenu = menuData.filter(item => item.id !== id);
       setMenuData(updatedMenu);
-      localStorage.setItem('menu_data', JSON.stringify(updatedMenu));
+      syncMenuData(updatedMenu);
     }
   };
 
   // 添加菜品
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!newItem.name || !newItem.price) return;
-    
-    const newId = Math.max(...menuData.map(item => item.id)) + 1;
+
     const item = {
-      id: newId,
       name: newItem.name,
       price: parseFloat(newItem.price),
       desc: newItem.desc,
-      sales: 0,
-      rating: '0%',
       category: 'Mains',
-      image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80',
+      image: newItem.image || 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80',
       tags: []
     };
-    
-    const updatedMenu = [...menuData, item];
-    setMenuData(updatedMenu);
-    localStorage.setItem('menu_data', JSON.stringify(updatedMenu));
-    setNewItem({ name: '', price: '', desc: 'Popular dish' });
+
+    // 调用后端API添加菜品
+    const savedItem = await addItemToBackend(item);
+
+    if (savedItem) {
+      // 使用后端返回的数据（包含正确的ID）
+      const updatedMenu = [...menuData, savedItem];
+      setMenuData(updatedMenu);
+      syncMenuData(updatedMenu);
+    }
+
+    setNewItem({ name: '', price: '', desc: 'Popular dish', image: '' });
     setIsAddingItem(false);
   };
 

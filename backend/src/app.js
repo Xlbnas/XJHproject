@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const authRoutes = require('./modules/auth/auth.routes');
@@ -139,6 +140,119 @@ app.get('/api/menu', (req, res) => {
   }
 });
 
+// Add new menu item
+app.post('/api/menu', (req, res) => {
+  try {
+    const db = dbModule.getDb();
+    const { name, price, desc, category, image, tags } = req.body;
+
+    if (!name || !price) {
+      return res.status(400).json({ error: 'Name and price are required' });
+    }
+
+    const tagsString = tags ? tags.join(',') : '';
+
+    db.run(
+      'INSERT INTO menu_items (name, category, price, desc, image, tags, sales) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, category || 'Mains', price, desc || '', image || '', tagsString, 0],
+      function(err) {
+        if (err) {
+          console.error('Error adding menu item:', err);
+          return res.status(500).json({ error: 'Failed to add menu item' });
+        }
+
+        // Get the newly added item
+        const stmt = db.prepare('SELECT * FROM menu_items WHERE id = ?');
+        stmt.bind([this.lastID]);
+        if (stmt.step()) {
+          const newItem = stmt.getAsObject();
+          // 立即保存数据库到文件
+          dbModule.saveDatabase && dbModule.saveDatabase();
+          res.status(201).json({
+            ...newItem,
+            tags: newItem.tags ? newItem.tags.split(',') : []
+          });
+        } else {
+          res.status(500).json({ error: 'Failed to retrieve newly added item' });
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Add menu item error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update menu item
+app.put('/api/menu/:id', (req, res) => {
+  try {
+    const db = dbModule.getDb();
+    const { id } = req.params;
+    const { name, price, desc, category, image, tags } = req.body;
+    
+    if (!name || !price) {
+      return res.status(400).json({ error: 'Name and price are required' });
+    }
+    
+    const tagsString = tags ? tags.join(',') : '';
+    
+    db.run(
+      'UPDATE menu_items SET name = ?, category = ?, price = ?, desc = ?, image = ?, tags = ? WHERE id = ?',
+      [name, category || 'Mains', price, desc || '', image || '', tagsString, id],
+      function(err) {
+        if (err) {
+          console.error('Error updating menu item:', err);
+          return res.status(500).json({ error: 'Failed to update menu item' });
+        }
+        
+        if (this.changes === 0) {
+          return res.status(404).json({ error: 'Menu item not found' });
+        }
+        
+        // Get the updated item
+        const stmt = db.prepare('SELECT * FROM menu_items WHERE id = ?');
+        stmt.bind([id]);
+        if (stmt.step()) {
+          const updatedItem = stmt.getAsObject();
+          res.json({
+            ...updatedItem,
+            tags: updatedItem.tags ? updatedItem.tags.split(',') : []
+          });
+        } else {
+          res.status(500).json({ error: 'Failed to retrieve updated item' });
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Update menu item error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete menu item
+app.delete('/api/menu/:id', (req, res) => {
+  try {
+    const db = dbModule.getDb();
+    const { id } = req.params;
+    
+    db.run('DELETE FROM menu_items WHERE id = ?', [id], function(err) {
+      if (err) {
+        console.error('Error deleting menu item:', err);
+        return res.status(500).json({ error: 'Failed to delete menu item' });
+      }
+      
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Menu item not found' });
+      }
+      
+      res.json({ message: 'Menu item deleted successfully' });
+    });
+  } catch (error) {
+    console.error('Delete menu item error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Socket.io events
 io.on('connection', (socket) => {
   console.log('A user connected');
@@ -158,13 +272,15 @@ function initDb() {
     console.error('Database not initialized');
     return;
   }
-  
+
   // users: created by registration/login, ensure baseline columns exist
+  // 注意：不要执行 DROP TABLE，否则会丢失数据
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
+      phone TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      nickname TEXT,
       role TEXT DEFAULT 'user',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -199,7 +315,8 @@ function initDb() {
 
   // 创建管理员账户
   try {
-    db.run('INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)', ['Xlbnas', 'Xlbnas', 'admin']);
+    const hashedPassword = bcrypt.hashSync('Xlbnas', 10);
+    db.run('INSERT OR IGNORE INTO users (phone, password_hash, role) VALUES (?, ?, ?)', ['Xlbnas', hashedPassword, 'admin']);
     console.log('Admin account created or already exists');
   } catch (err) {
     console.error('Error creating admin account:', err);

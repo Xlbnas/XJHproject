@@ -18,16 +18,29 @@ const Order = () => {
     // 从后端API获取菜单数据
     const fetchMenuData = async () => {
       try {
+        // 先检查本地存储是否有最新数据
+        const savedMenuData = localStorage.getItem('menu_data');
+        if (savedMenuData) {
+          setMenuData(JSON.parse(savedMenuData));
+          console.log('Loaded menu data from localStorage');
+        }
+        
+        // 然后尝试从后端获取最新数据
         const response = await axios.get('http://localhost:964/api/menu');
-        setMenuData(response.data);
-        // 缓存到本地存储，作为后备
-        localStorage.setItem('menu_data', JSON.stringify(response.data));
+        // 只有当后端数据与本地存储不同时才更新
+        if (!savedMenuData || JSON.stringify(response.data) !== savedMenuData) {
+          setMenuData(response.data);
+          // 缓存到本地存储，作为后备
+          localStorage.setItem('menu_data', JSON.stringify(response.data));
+          console.log('Loaded menu data from API');
+        }
       } catch (error) {
         console.error('Error fetching menu data:', error);
         // 失败时使用本地存储的缓存数据
         const savedMenuData = localStorage.getItem('menu_data');
         if (savedMenuData) {
           setMenuData(JSON.parse(savedMenuData));
+          console.log('Loaded menu data from localStorage (fallback)');
         } else {
           // 最后使用默认数据
           const defaultMenuData = [
@@ -36,6 +49,7 @@ const Order = () => {
           ];
           setMenuData(defaultMenuData);
           localStorage.setItem('menu_data', JSON.stringify(defaultMenuData));
+          console.log('Loaded menu data from default (fallback)');
         }
       }
     };
@@ -338,7 +352,13 @@ const Order = () => {
         <div className="menu-grid">
           {filteredMenu.map(item => (
             <div key={item.id} className="menu-item">
-              <div className="menu-item-image"><img src={item.image} alt={item.name}></img></div>
+              <div className="menu-item-image">
+                {item.image ? (
+                  <img src={item.image} alt={item.name} onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#9ca3af;font-size:48px;">🍽️</div>'; }} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f3f4f6', color: '#9ca3af', fontSize: '48px' }}>🍽️</div>
+                )}
+              </div>
               <div className="menu-item-name">{item.name}</div>
               <div className="menu-item-desc">{item.desc}</div>
               <div className="menu-item-tags">
