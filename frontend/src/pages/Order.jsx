@@ -224,16 +224,18 @@ const Order = () => {
 
         {showSuggestions && (
           <div className="ai-suggestions show">
-            <h3>🤖 AI Recommendations</h3>
+            <div className="suggestions-header">
+              AI Recommendations (for "{searchQuery}")
+            </div>
             {aiSuggestions.length > 0 ? (
               aiSuggestions.map(({ item, reason }) => (
                 <div key={item.id} className="suggestion-item" onClick={() => selectSuggestion(item)}>
-                  <div className="suggestion-image">
-                    <img src={item.image} alt={item.name} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '6px' }} />
-                  </div>
                   <div className="suggestion-content">
-                    <div className="suggestion-title">{item.name} - ¥{item.price.toFixed(2)}</div>
-                    <div className="suggestion-reason">💡 {reason}</div>
+                    <div className="suggestion-name-price">
+                      <h4>{item.name}</h4>
+                      <p className="suggestion-price">¥{item.price.toFixed(2)}</p>
+                    </div>
+                    <p className="suggestion-reason">💡 {reason}</p>
                   </div>
                 </div>
               ))

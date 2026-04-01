@@ -93,12 +93,12 @@ function processNaturalLanguage(query) {
   return keywords.length > 0 ? keywords.join(',') : null;
 }
 
-// AI模型调用函数（作为备选）
+// AI模型调用函数（使用SiliconFlow模型广场中的轻量级模型）
 async function getAIInsights(query) {
   try {
-    // 尝试使用SiliconFlow API
+    // 尝试使用SiliconFlow API，使用轻量级模型
     const response = await axios.post('https://api.siliconflow.cn/v1/chat/completions', {
-      model: 'gpt-4', // 尝试使用gpt-4模型
+      model: 'PaddlePaddle/PaddleOCR-VL-1.5', // 使用SiliconFlow模型广场中的轻量级模型（0.9B参数）
       messages: [
         {
           role: 'system',
