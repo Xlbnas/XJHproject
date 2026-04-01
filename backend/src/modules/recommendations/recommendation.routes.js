@@ -96,25 +96,27 @@ function processNaturalLanguage(query) {
 // AI模型调用函数（使用SiliconFlow模型广场中的轻量级模型）
 async function getAIInsights(query) {
   try {
-    // 尝试使用SiliconFlow API，使用轻量级模型
+    // 尝试使用SiliconFlow API，使用DeepSeek-V3.2模型
     const response = await axios.post('https://api.siliconflow.cn/v1/chat/completions', {
-      model: 'PaddlePaddle/PaddleOCR-VL-1.5', // 使用SiliconFlow模型广场中的轻量级模型（0.9B参数）
+      model: 'deepseek-ai/DeepSeek-V3.2', // 使用SiliconFlow模型广场中的DeepSeek-V3.2模型
       messages: [
         {
           role: 'system',
-          content: 'You are a restaurant recommendation assistant. Analyze the user\'s request and identify key food preferences such as cuisine type, ingredients, spice level, price range, and any other relevant factors. Return only the keywords separated by commas.'
+          content: 'You are a restaurant recommendation assistant. Extract only the key food-related keywords from the user\'s request. Return only the keywords separated by commas, no extra text.'
         },
         {
           role: 'user',
           content: query
         }
       ],
-      max_tokens: 50
+      max_tokens: 20,
+      temperature: 0.3 // 降低温度以获得更确定性的结果
     }, {
       headers: {
         'Authorization': 'Bearer sk-sbnzgsabgpixukfohctlvdgvmwedjjlcuaoomdvitajxfuak',
         'Content-Type': 'application/json'
-      }
+      },
+      timeout: 3000 // 缩短超时时间
     });
     
     return response.data.choices[0].message.content.trim();
@@ -134,9 +136,10 @@ router.get('/recommend', throttle, async (req, res) => {
       return res.json({ suggestions: [] });
     }
     
-    // 使用基于规则的自然语言处理获取关键词
-    const aiInsights = processNaturalLanguage(query);
-    let keywords = [];
+    let keywords = [query.toLowerCase()];
+    
+    // 尝试使用AI模型获取更多关键词
+    const aiInsights = await getAIInsights(query);
     if (aiInsights) {
       keywords = aiInsights.split(',').map(keyword => keyword.trim().toLowerCase()).filter(Boolean);
     }

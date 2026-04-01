@@ -47,8 +47,71 @@ app.get('/api/menu', (req, res) => {
     const menuData = [];
     while (stmt.step()) {
       const row = stmt.getAsObject();
+      // 为不同类别的菜品使用不同的有效图片链接
+      let imageUrl = row.image;
+      if (!imageUrl || imageUrl.includes('1563245372-f7216b524901')) {
+        switch (row.category) {
+          case 'Mains':
+            if (row.name.includes('Chicken')) {
+              imageUrl = 'https://images.unsplash.com/photo-1604908176997-1251884b08a5?auto=format&fit=crop&w=800&q=80';
+            } else if (row.name.includes('Tofu')) {
+              imageUrl = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80';
+            } else if (row.name.includes('Pork')) {
+              imageUrl = 'https://images.unsplash.com/photo-1564936829992-9f38b51f0564?auto=format&fit=crop&w=800&q=80';
+            } else if (row.name.includes('Fish') || row.name.includes('Bass')) {
+              imageUrl = 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80';
+            } else {
+              imageUrl = 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=800&q=80';
+            }
+            break;
+          case 'Vegetables':
+            imageUrl = 'https://images.unsplash.com/photo-1518843875459-f738682238a6?auto=format&fit=crop&w=800&q=80';
+            break;
+          case 'Rice & Noodles':
+            if (row.name.includes('Rice')) {
+              imageUrl = 'https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=800&q=80';
+            } else {
+              imageUrl = 'https://images.unsplash.com/photo-1563379617071-fb1a474b23d3?auto=format&fit=crop&w=800&q=80';
+            }
+            break;
+          case 'Appetizers':
+            if (row.name.includes('Rolls')) {
+              imageUrl = 'https://images.unsplash.com/photo-1563245372-f7216b524901?auto=format&fit=crop&w=800&q=80';
+            } else {
+              imageUrl = 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=800&q=80';
+            }
+            break;
+          case 'Soups':
+            imageUrl = 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80';
+            break;
+          case 'Drinks':
+            if (row.name.includes('Tea')) {
+              imageUrl = 'https://images.unsplash.com/photo-1559056199-58995227520e?auto=format&fit=crop&w=800&q=80';
+            } else if (row.name.includes('Milk')) {
+              imageUrl = 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80';
+            } else if (row.name.includes('Juice')) {
+              imageUrl = 'https://images.unsplash.com/photo-1592845348565-4585b8569a29?auto=format&fit=crop&w=800&q=80';
+            } else {
+              imageUrl = 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=800&q=80';
+            }
+            break;
+          case 'Desserts':
+            if (row.name.includes('Pudding')) {
+              imageUrl = 'https://images.unsplash.com/photo-1599784129161-887e227b9b3a?auto=format&fit=crop&w=800&q=80';
+            } else if (row.name.includes('Bean')) {
+              imageUrl = 'https://images.unsplash.com/photo-1563245372-f7216b524901?auto=format&fit=crop&w=800&q=80';
+            } else {
+              imageUrl = 'https://images.unsplash.com/photo-1543363102-28c713943584?auto=format&fit=crop&w=800&q=80';
+            }
+            break;
+          default:
+            imageUrl = 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=800&q=80';
+        }
+      }
+      
       menuData.push({
         ...row,
+        image: imageUrl,
         tags: row.tags ? row.tags.split(',') : []
       });
     }

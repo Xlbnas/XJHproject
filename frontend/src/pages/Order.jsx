@@ -10,6 +10,9 @@ const Order = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isAiThinking, setIsAiThinking] = useState(false);
+  const [isSwitchingSearch, setIsSwitchingSearch] = useState(false);
+  const [isAiSearch, setIsAiSearch] = useState(true); // 默认使用AI搜索
 
   useEffect(() => {
     // 从后端API获取菜单数据
@@ -75,55 +78,97 @@ const Order = () => {
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   };
 
-  // 防抖函数
-  const debounce = (func, delay) => {
-    let timeoutId;
-    return (...args) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func.apply(null, args), delay);
-    };
-  };
-
   // 客户端缓存
   const [cache, setCache] = useState(new Map());
 
-  // 防抖处理搜索
-  const handleSearch = useCallback(debounce(async () => {
+  // 搜索函数
+  const handleSearch = useCallback(async () => {
     if (!searchQuery) {
       setShowSuggestions(false);
+      setIsAiThinking(false);
+      setIsSwitchingSearch(false);
       return;
     }
 
+    // 为不同搜索模式使用不同的缓存键
+    const cacheKey = `${isAiSearch ? 'ai:' : 'regular:'}${searchQuery}`;
+
     // 检查缓存
-    if (cache.has(searchQuery)) {
-      setAiSuggestions(cache.get(searchQuery));
+    if (cache.has(cacheKey)) {
+      setAiSuggestions(cache.get(cacheKey));
       setShowSuggestions(true);
+      setIsAiThinking(false);
+      setIsSwitchingSearch(false);
       return;
     }
 
     try {
-      // 调用后端推荐API
-      const response = await axios.get('http://localhost:964/api/recommendations/recommend', {
-        params: { query: searchQuery }
-      });
-      
-      const suggestions = response.data.suggestions;
-      // 缓存结果
-      setCache(prevCache => {
-        const newCache = new Map(prevCache);
-        newCache.set(searchQuery, suggestions);
-        // 限制缓存大小
-        if (newCache.size > 50) {
-          const firstKey = newCache.keys().next().value;
-          newCache.delete(firstKey);
-        }
-        return newCache;
-      });
-      
-      setAiSuggestions(suggestions);
-      setShowSuggestions(true);
+      if (isAiSearch) {
+        // 开始AI思考
+        setIsAiThinking(true);
+        setIsSwitchingSearch(false);
+        setShowSuggestions(false); // 先隐藏推荐，避免闪烁
+        
+        // 调用后端推荐API
+        const response = await axios.get('http://localhost:964/api/recommendations/recommend', {
+          params: { query: searchQuery }
+        });
+        
+        const suggestions = response.data.suggestions;
+        // 缓存结果
+        setCache(prevCache => {
+          const newCache = new Map(prevCache);
+          newCache.set(cacheKey, suggestions);
+          // 限制缓存大小
+          if (newCache.size > 50) {
+            const firstKey = newCache.keys().next().value;
+            newCache.delete(firstKey);
+          }
+          return newCache;
+        });
+        
+        setAiSuggestions(suggestions);
+        setShowSuggestions(true);
+        setIsAiThinking(false);
+        setIsSwitchingSearch(false);
+      } else {
+        // 使用自然语言搜索
+        setIsAiThinking(false);
+        setIsSwitchingSearch(false);
+        setShowSuggestions(false); // 先隐藏推荐，避免闪烁
+        
+        // 本地搜索
+        const query = searchQuery.toLowerCase();
+        const suggestions = menuData
+          .filter(item => 
+            item.name.toLowerCase().includes(query) || 
+            item.desc.toLowerCase().includes(query) || 
+            item.tags.some(tag => tag.toLowerCase().includes(query))
+          )
+          .slice(0, 6)
+          .map(item => ({ item, reason: 'Match found' }));
+
+        // 缓存本地结果
+        setCache(prevCache => {
+          const newCache = new Map(prevCache);
+          newCache.set(cacheKey, suggestions);
+          if (newCache.size > 50) {
+            const firstKey = newCache.keys().next().value;
+            newCache.delete(firstKey);
+          }
+          return newCache;
+        });
+
+        setAiSuggestions(suggestions);
+        setShowSuggestions(true);
+      }
     } catch (error) {
       console.error('Error fetching recommendations:', error);
+      // 切换到自然语言搜索
+      setIsSwitchingSearch(true);
+      setIsAiThinking(false);
+      setShowSuggestions(false); // 先隐藏推荐，避免闪烁
+      
       // 失败时使用本地模拟数据
       const query = searchQuery.toLowerCase();
       const suggestions = menuData
@@ -138,7 +183,7 @@ const Order = () => {
       // 缓存本地结果
       setCache(prevCache => {
         const newCache = new Map(prevCache);
-        newCache.set(searchQuery, suggestions);
+        newCache.set(cacheKey, suggestions);
         if (newCache.size > 50) {
           const firstKey = newCache.keys().next().value;
           newCache.delete(firstKey);
@@ -148,12 +193,19 @@ const Order = () => {
 
       setAiSuggestions(suggestions);
       setShowSuggestions(true);
+      setIsSwitchingSearch(false);
     }
-  }, 300), [searchQuery, menuData, cache]);
+  }, [searchQuery, menuData, cache, isAiSearch]);
 
   // 监听搜索输入变化，实时触发推荐
   useEffect(() => {
-    handleSearch();
+    // 防抖处理
+    const timeoutId = setTimeout(() => {
+      handleSearch();
+    }, 300);
+
+    // 清除定时器
+    return () => clearTimeout(timeoutId);
   }, [searchQuery, handleSearch]);
 
   const selectSuggestion = (item) => {
@@ -214,12 +266,43 @@ const Order = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
           />
-          <button id="searchBtn" onClick={handleSearch}>Search</button>
+          <div className="search-mode-buttons">
+            <button 
+              className={`search-mode-btn ai-search-btn ${isAiSearch ? 'active' : ''}`}
+              onClick={() => {
+                setIsAiSearch(true);
+                handleSearch();
+              }}
+            >
+              AI Search
+            </button>
+            <button 
+              className={`search-mode-btn regular-search-btn ${!isAiSearch ? 'active' : ''}`}
+              onClick={() => {
+                setIsAiSearch(false);
+                handleSearch();
+              }}
+            >
+              Regular Search
+            </button>
+          </div>
+          
+          {isAiThinking && (
+            <div className="ai-progress-container">
+              <div className="ai-progress-bar"></div>
+            </div>
+          )}
+          
+          {isSwitchingSearch && (
+            <div className="ai-switching">
+              正在切换智能搜索方式...
+            </div>
+          )}
           
           {showSuggestions && (
             <div className="ai-suggestions show">
               <div className="suggestions-header">
-                AI Recommendations (for "{searchQuery}")
+                {isAiSearch ? 'AI Recommendations' : 'Search Results'} (for "{searchQuery}")
               </div>
               {aiSuggestions.length > 0 ? (
                 aiSuggestions.map(({ item, reason }) => (
