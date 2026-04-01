@@ -1,9 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import random
+import httpx
+import os
+import json
 from datetime import datetime
+from dotenv import load_dotenv
 
 from .database import init_db, get_db, User, MenuItem, Order, OrderItem
 from .auth import (
@@ -17,6 +21,9 @@ from .schemas import (
     RecommendationRequest, RecommendationResponse, RecommendationItem
 )
 
+# 加载环境变量
+load_dotenv()
+
 app = FastAPI(title="Smart Order System API")
 
 # CORS 配置
@@ -27,6 +34,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 硅基流动 API 配置
+SILICONFLOW_API_KEY = os.getenv("API_KEY")
+SILICONFLOW_API_URL = "https://api.siliconflow.cn/v1/chat/completions"
 
 # 初始化数据库
 @app.on_event("startup")
@@ -314,14 +325,95 @@ def create_review(order_no: str, review: OrderReviewCreate,
 
 # ==================== 推荐路由 ====================
 
-@app.get("/api/recommendations/recommend")
-def get_recommendations(query: str, db: Session = Depends(get_db)):
-    # 简单的推荐逻辑：根据查询关键词匹配菜品名称、描述或标签
-    query_lower = query.lower()
-    items = db.query(MenuItem).all()
+async def call_siliconflow_api(query: str, menu_items: List[MenuItem]) -> List[int]:
+    """
+    调用硅基流动 API 获取 AI 推荐
+    返回推荐菜品的 ID 列表
+    """
+    if not SILICONFLOW_API_KEY:
+        raise HTTPException(status_code=500, detail="API Key not configured")
     
+    # 构建菜单信息
+    menu_info = "\n".join([
+        f"ID: {item.id}, Name: {item.name}, Category: {item.category}, "
+        f"Description: {item.desc}, Tags: {item.tags}, Price: {item.price}"
+        for item in menu_items
+    ])
+    
+    # 构建提示词
+    prompt = f"""You are a restaurant recommendation system. Based on the user's query, recommend the most suitable dishes from the menu.
+
+User Query: "{query}"
+
+Available Menu:
+{menu_info}
+
+Please analyze the user's query and recommend the top 6 most relevant dishes. 
+Respond ONLY with a JSON array of dish IDs in order of relevance, like: [1, 5, 3, 8, 2, 7]
+Do not include any other text, only the JSON array."""
+
+    headers = {
+        "Authorization": f"Bearer {SILICONFLOW_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "model": "Pro/deepseek-ai/DeepSeek-V3",
+        "messages": [
+            {"role": "system", "content": "You are a helpful restaurant recommendation assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.7,
+        "max_tokens": 500
+    }
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                SILICONFLOW_API_URL,
+                headers=headers,
+                json=payload,
+                timeout=30.0
+            )
+            response.raise_for_status()
+            
+            result = response.json()
+            content = result["choices"][0]["message"]["content"]
+            
+            # 解析 JSON 数组
+            # 清理可能的 markdown 代码块
+            content = content.strip()
+            if content.startswith("```json"):
+                content = content[7:]
+            if content.startswith("```"):
+                content = content[3:]
+            if content.endswith("```"):
+                content = content[:-3]
+            content = content.strip()
+            
+            # 解析 JSON
+            recommended_ids = json.loads(content)
+            
+            # 验证返回的是列表
+            if not isinstance(recommended_ids, list):
+                raise ValueError("Response is not a list")
+            
+            return recommended_ids[:6]  # 最多返回6个
+            
+        except Exception as e:
+            print(f"AI API call failed: {e}")
+            # 如果 API 调用失败，返回空列表，让调用方使用备用方案
+            return []
+
+def regular_search(query: str, menu_items: List[MenuItem]) -> List[tuple]:
+    """
+    普通搜索：基于关键词匹配
+    返回 (匹配分数, 菜品, 理由) 的列表
+    """
+    query_lower = query.lower()
     suggestions = []
-    for item in items:
+    
+    for item in menu_items:
         match_score = 0
         reason = ""
         
@@ -338,9 +430,47 @@ def get_recommendations(query: str, db: Session = Depends(get_db)):
         if match_score > 0:
             suggestions.append((match_score, item, reason))
     
-    # 按匹配分数排序，取前6个
+    # 按匹配分数排序
     suggestions.sort(key=lambda x: x[0], reverse=True)
-    suggestions = suggestions[:6]
+    return suggestions[:6]
+
+@app.get("/api/recommendations/recommend")
+async def get_recommendations(
+    query: str, 
+    mode: str = "ai",  # "ai" 或 "regular"
+    db: Session = Depends(get_db)
+):
+    """
+    获取推荐菜品
+    
+    参数:
+    - query: 搜索关键词
+    - mode: 搜索模式，"ai" 使用大模型，"regular" 使用本地关键词匹配
+    """
+    menu_items = db.query(MenuItem).all()
+    
+    if mode == "ai":
+        # AI 搜索：使用硅基流动大模型
+        try:
+            recommended_ids = await call_siliconflow_api(query, menu_items)
+            
+            # 根据返回的 ID 获取菜品
+            suggestions = []
+            for item_id in recommended_ids:
+                item = db.query(MenuItem).filter(MenuItem.id == item_id).first()
+                if item:
+                    suggestions.append((10, item, "AI recommended"))
+            
+            # 如果 AI 没有返回结果，回退到普通搜索
+            if not suggestions:
+                suggestions = regular_search(query, menu_items)
+                
+        except Exception as e:
+            print(f"AI search failed, falling back to regular search: {e}")
+            suggestions = regular_search(query, menu_items)
+    else:
+        # Regular 搜索：使用本地关键词匹配
+        suggestions = regular_search(query, menu_items)
     
     return RecommendationResponse(suggestions=[
         RecommendationItem(
