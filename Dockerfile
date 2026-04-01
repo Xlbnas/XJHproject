@@ -1,5 +1,5 @@
 # 构建前端
-FROM node:18-alpine as frontend
+FROM node:20-alpine as frontend
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
@@ -7,14 +7,14 @@ COPY frontend/ .
 RUN npm run build
 
 # 构建后端
-FROM node:18-alpine as backend
+FROM node:20-alpine as backend
 WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm install
 COPY backend/ .
 
 # 最终镜像
-FROM node:18-alpine
+FROM node:20-alpine
 WORKDIR /app
 
 # 复制前端构建结果

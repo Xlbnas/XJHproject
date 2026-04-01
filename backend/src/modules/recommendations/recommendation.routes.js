@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const dbModule = require('../../config/db');
 const axios = require('axios');
+require('dotenv').config();
 
 // 请求节流机制
 const requestThrottle = {
@@ -113,7 +114,7 @@ async function getAIInsights(query) {
       temperature: 0.3 // 降低温度以获得更确定性的结果
     }, {
       headers: {
-        'Authorization': 'Bearer sk-sbnzgsabgpixukfohctlvdgvmwedjjlcuaoomdvitajxfuak',
+        'Authorization': `Bearer ${process.env.API_KEY}`,
         'Content-Type': 'application/json'
       },
       timeout: 3000 // 缩短超时时间
