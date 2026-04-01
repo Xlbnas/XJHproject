@@ -35,6 +35,31 @@ app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 
+// Menu API endpoint
+app.get('/api/menu', (req, res) => {
+  try {
+    const db = dbModule.getDb();
+    const stmt = db.prepare(`
+      SELECT id, name, category, price, desc, image, tags, sales 
+      FROM menu_items
+    `);
+    
+    const menuData = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      menuData.push({
+        ...row,
+        tags: row.tags ? row.tags.split(',') : []
+      });
+    }
+    
+    res.json(menuData);
+  } catch (error) {
+    console.error('Menu API error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Socket.io events
 io.on('connection', (socket) => {
   console.log('A user connected');

@@ -12,37 +12,32 @@ const Order = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
-    // 从localStorage获取菜单数据，如果没有则使用默认数据
-    const savedMenuData = localStorage.getItem('menu_data');
-    if (savedMenuData) {
-      setMenuData(JSON.parse(savedMenuData));
-    } else {
-      // 默认菜单数据
-      const defaultMenuData = [
-        { id: 1, name: 'Kung Pao Chicken', category: 'Mains', price: 38, desc: 'Classic Sichuan dish — tender chicken with crunchy peanuts', image: 'https://images.unsplash.com/photo-1604908176997-1251884b08a5?auto=format&fit=crop&w=800&q=80', tags: ['Spicy', 'Sichuan', 'Chicken', 'Hearty'], sales: 186 },
-        { id: 2, name: 'Mapo Tofu', category: 'Mains', price: 28, desc: 'Silky tofu with spicy minced meat — perfect with rice', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80', tags: ['Spicy', 'Sichuan', 'Tofu', 'Vegetarian'], sales: 152 },
-        { id: 3, name: 'Sweet & Sour Pork', category: 'Mains', price: 42, desc: 'Tangy and sweet, crispy outside, tender inside', image: 'https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?auto=format&fit=crop&w=800&q=80', tags: ['Sweet & Sour', 'Pork', 'Classic'], sales: 134 },
-        { id: 4, name: 'Braised Pork Belly', category: 'Mains', price: 48, desc: 'Rich but not greasy, melts in your mouth', image: 'https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?auto=format&fit=crop&w=800&q=80', tags: ['Pork', 'Classic', 'Hearty'], sales: 167 },
-        { id: 5, name: 'Steamed Sea Bass', category: 'Mains', price: 58, desc: 'Delicate, fresh, and nutritious', image: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80', tags: ['Light', 'Seafood', 'Healthy'], sales: 98 },
-        { id: 6, name: 'Garlic Broccoli', category: 'Mains', price: 22, desc: 'Fresh and healthy, packed with nutrients', image: 'https://images.unsplash.com/photo-1505575967455-40e256f73376?auto=format&fit=crop&w=800&q=80', tags: ['Light', 'Vegetarian', 'Healthy'], sales: 121 },
-        { id: 7, name: 'Boiled Fish in Chili Oil', category: 'Mains', price: 52, desc: 'Fiery and aromatic, silky tender fish', image: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=800&q=80', tags: ['Spicy', 'Sichuan', 'Seafood'], sales: 143 },
-        { id: 8, name: 'Yu Xiang Shredded Pork', category: 'Mains', price: 35, desc: 'Sweet, sour & mildly spicy — a Sichuan classic', image: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=800&q=80', tags: ['Sweet & Sour', 'Sichuan', 'Pork'], sales: 128 },
-        { id: 9, name: 'Fried Chicken Wings', category: 'Sides', price: 32, desc: 'Golden crispy outside, juicy inside', image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80', tags: ['Fried', 'Chicken', 'Snack'], sales: 156 },
-        { id: 10, name: 'Spring Rolls', category: 'Sides', price: 18, desc: 'Crispy shell, savory filling', image: 'https://images.unsplash.com/photo-1455853739633-8c94c03d8127?auto=format&fit=crop&w=800&q=80', tags: ['Fried', 'Vegetarian', 'Snack'], sales: 98 },
-        { id: 11, name: 'Soup Dumplings', category: 'Sides', price: 28, desc: 'Thin wrapper, generous filling, rich broth', image: 'https://images.unsplash.com/photo-1466637574441-749b8f19452f?auto=format&fit=crop&w=800&q=80', tags: ['Classic', 'Snack', 'Pork'], sales: 187 },
-        { id: 12, name: 'Pan-Fried Dumplings', category: 'Sides', price: 24, desc: 'Golden bottom, loaded with filling', image: 'https://images.unsplash.com/photo-1541450864946-90cbb9c0e7c7?auto=format&fit=crop&w=800&q=80', tags: ['Pan-Fried', 'Snack', 'Classic'], sales: 134 },
-        { id: 13, name: 'Cola', category: 'Drinks', price: 8, desc: 'Ice-cold cola, crisp and refreshing', image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80', tags: ['Carbonated', 'Cold', 'Classic'], sales: 234 },
-        { id: 14, name: 'Lemon Honey Tea', category: 'Drinks', price: 15, desc: 'Sweet & tangy, soothes the throat', image: 'https://images.unsplash.com/photo-1509043759401-136742328bb3?auto=format&fit=crop&w=800&q=80', tags: ['Tea', 'Healthy', 'Sweet & Sour'], sales: 112 },
-        { id: 15, name: 'Fresh Orange Juice', category: 'Drinks', price: 18, desc: 'Freshly squeezed, rich in Vitamin C', image: 'https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&w=800&q=80', tags: ['Juice', 'Healthy', 'Vitamin C'], sales: 98 },
-        { id: 16, name: 'Milk Tea', category: 'Drinks', price: 20, desc: 'Rich and silky, perfectly sweetened', image: 'https://images.unsplash.com/photo-1577803645773-f96470509666?auto=format&fit=crop&w=800&q=80', tags: ['Tea', 'Classic', 'Sweet'], sales: 189 },
-        { id: 17, name: 'Tiramisu', category: 'Desserts', price: 35, desc: 'Italian classic, layers of rich flavor', image: 'https://images.unsplash.com/photo-1601972599720-36938d4ecd31?auto=format&fit=crop&w=800&q=80', tags: ['Sweet', 'Classic', 'Italian'], sales: 123 },
-        { id: 18, name: 'Mango Pudding', category: 'Desserts', price: 22, desc: 'Bouncy and smooth, sweet mango flavor', image: 'https://images.unsplash.com/photo-1525253086316-d0c936c814f8?auto=format&fit=crop&w=800&q=80', tags: ['Sweet', 'Fruit', 'Chewy'], sales: 98 },
-        { id: 19, name: 'Red Bean Paste', category: 'Desserts', price: 18, desc: 'Sweet and soft, traditional classic', image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80', tags: ['Sweet', 'Traditional', 'Red Bean'], sales: 76 },
-        { id: 20, name: 'Ice Cream', category: 'Desserts', price: 15, desc: 'Cool and sweet, multiple flavors', image: 'https://images.unsplash.com/photo-1570197571499-166b36435e9f?auto=format&fit=crop&w=800&q=80', tags: ['Icy', 'Sweet', 'Classic'], sales: 156 }
-      ];
-      setMenuData(defaultMenuData);
-      localStorage.setItem('menu_data', JSON.stringify(defaultMenuData));
-    }
+    // 从后端API获取菜单数据
+    const fetchMenuData = async () => {
+      try {
+        const response = await axios.get('http://localhost:964/api/menu');
+        setMenuData(response.data);
+        // 缓存到本地存储，作为后备
+        localStorage.setItem('menu_data', JSON.stringify(response.data));
+      } catch (error) {
+        console.error('Error fetching menu data:', error);
+        // 失败时使用本地存储的缓存数据
+        const savedMenuData = localStorage.getItem('menu_data');
+        if (savedMenuData) {
+          setMenuData(JSON.parse(savedMenuData));
+        } else {
+          // 最后使用默认数据
+          const defaultMenuData = [
+            { id: 1, name: 'Kung Pao Chicken', category: 'Mains', price: 38, desc: 'Classic Sichuan dish — tender chicken with crunchy peanuts', image: 'https://images.unsplash.com/photo-1604908176997-1251884b08a5?auto=format&fit=crop&w=800&q=80', tags: ['Spicy', 'Sichuan', 'Chicken', 'Hearty'], sales: 186 },
+            { id: 2, name: 'Mapo Tofu', category: 'Mains', price: 28, desc: 'Silky tofu with spicy minced meat — perfect with rice', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80', tags: ['Spicy', 'Sichuan', 'Tofu', 'Vegetarian'], sales: 152 }
+          ];
+          setMenuData(defaultMenuData);
+          localStorage.setItem('menu_data', JSON.stringify(defaultMenuData));
+        }
+      }
+    };
+
+    fetchMenuData();
   }, []);
 
   const categories = ['all', 'Mains', 'Sides', 'Drinks', 'Desserts'];
