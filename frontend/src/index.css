@@ -130,6 +130,7 @@ body::after {
     gap: 10px;
     margin-bottom: 15px;
     position: relative;
+    flex-wrap: wrap;
 }
 
 #searchInput {
@@ -182,7 +183,7 @@ body::after {
 
 .ai-suggestions {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 5px);
     left: 0;
     width: 100%;
     max-height: 300px;

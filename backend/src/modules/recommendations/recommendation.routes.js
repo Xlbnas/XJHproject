@@ -154,10 +154,27 @@ router.get('/recommend', throttle, async (req, res) => {
         
         // 计算匹配得分
         let score = 0;
+        let matchedReason = '';
+        
         keywords.forEach(keyword => {
-          if (itemLower.includes(keyword)) score += 3; // 菜名匹配权重最高
-          if (descLower.includes(keyword)) score += 2; // 描述匹配权重次之
-          if (tagLowers.some(tag => tag.includes(keyword))) score += 1; // 标签匹配权重最低
+          const keywordLower = keyword.toLowerCase().trim();
+          if (keywordLower.length < 2) return; // 忽略太短的关键词
+          
+          // 菜名匹配权重最高
+          if (itemLower.includes(keywordLower)) {
+            score += 3;
+            matchedReason = 'Name match';
+          }
+          // 描述匹配权重次之
+          else if (descLower.includes(keywordLower)) {
+            score += 2;
+            matchedReason = 'Description match';
+          }
+          // 标签匹配权重最低，使用精确匹配
+          else if (tagLowers.some(tag => tag === keywordLower || tag.startsWith(keywordLower + ',') || tag.endsWith(',' + keywordLower) || tag.includes(',' + keywordLower + ','))) {
+            score += 1;
+            matchedReason = 'Tag match';
+          }
         });
         
         // 添加流行度得分（基于销量）
@@ -167,10 +184,10 @@ router.get('/recommend', throttle, async (req, res) => {
         return {
           item,
           score,
-          reason: aiInsights ? 'AI recommendation' : 'Match found'
+          reason: matchedReason || (aiInsights ? 'AI recommendation' : 'Match found')
         };
       })
-      .filter(item => item.score > 0) // 只保留有匹配的项
+      .filter(item => item.score > 0.5) // 只保留有匹配的项（提高阈值）
       .sort((a, b) => b.score - a.score) // 按得分降序排序
       .slice(0, 6) // 只返回前6个
       .map(({ item, reason }) => ({

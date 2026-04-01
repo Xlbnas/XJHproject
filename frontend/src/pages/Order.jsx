@@ -215,30 +215,30 @@ const Order = () => {
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
           />
           <button id="searchBtn" onClick={handleSearch}>Search</button>
-        </div>
-
-        {showSuggestions && (
-          <div className="ai-suggestions show">
-            <div className="suggestions-header">
-              AI Recommendations (for "{searchQuery}")
-            </div>
-            {aiSuggestions.length > 0 ? (
-              aiSuggestions.map(({ item, reason }) => (
-                <div key={item.id} className="suggestion-item" onClick={() => selectSuggestion(item)}>
-                  <div className="suggestion-content">
-                    <div className="suggestion-name-price">
-                      <h4>{item.name}</h4>
-                      <p className="suggestion-price">¥{item.price.toFixed(2)}</p>
+          
+          {showSuggestions && (
+            <div className="ai-suggestions show">
+              <div className="suggestions-header">
+                AI Recommendations (for "{searchQuery}")
+              </div>
+              {aiSuggestions.length > 0 ? (
+                aiSuggestions.map(({ item, reason }) => (
+                  <div key={item.id} className="suggestion-item" onClick={() => selectSuggestion(item)}>
+                    <div className="suggestion-content">
+                      <div className="suggestion-name-price">
+                        <h4>{item.name}</h4>
+                        <p className="suggestion-price">¥{item.price.toFixed(2)}</p>
+                      </div>
+                      <p className="suggestion-reason">💡 {reason}</p>
                     </div>
-                    <p className="suggestion-reason">💡 {reason}</p>
                   </div>
-                </div>
-              ))
-            ) : (
-              <p>No matching dishes found. Try searching with different keywords!</p>
-            )}
-          </div>
-        )}
+                ))
+              ) : (
+                <p>No matching dishes found. Try searching with different keywords!</p>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="category-tabs">
           {categories.map(category => (
