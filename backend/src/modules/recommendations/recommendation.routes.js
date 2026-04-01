@@ -134,12 +134,16 @@ router.get('/recommend', throttle, async (req, res) => {
       return res.json({ suggestions: [] });
     }
     
-    let keywords = [query.toLowerCase()];
-    
-    // 尝试使用AI模型获取更多关键词
-    const aiInsights = await getAIInsights(query);
+    // 使用基于规则的自然语言处理获取关键词
+    const aiInsights = processNaturalLanguage(query);
+    let keywords = [];
     if (aiInsights) {
       keywords = aiInsights.split(',').map(keyword => keyword.trim().toLowerCase()).filter(Boolean);
+    }
+    
+    // 如果没有提取到关键词，直接使用原始查询
+    if (keywords.length === 0) {
+      keywords = [query.toLowerCase()];
     }
     
     // 从数据库获取菜单数据
@@ -153,7 +157,7 @@ router.get('/recommend', throttle, async (req, res) => {
         const tagLowers = item.tags.map(tag => tag.toLowerCase());
         
         // 计算匹配得分
-        let score = 0;
+        let matchScore = 0;
         let matchedReason = '';
         
         keywords.forEach(keyword => {
@@ -162,32 +166,38 @@ router.get('/recommend', throttle, async (req, res) => {
           
           // 菜名匹配权重最高
           if (itemLower.includes(keywordLower)) {
-            score += 3;
+            matchScore += 3;
             matchedReason = 'Name match';
           }
           // 描述匹配权重次之
           else if (descLower.includes(keywordLower)) {
-            score += 2;
+            matchScore += 2;
             matchedReason = 'Description match';
           }
-          // 标签匹配权重最低，使用精确匹配
-          else if (tagLowers.some(tag => tag === keywordLower || tag.startsWith(keywordLower + ',') || tag.endsWith(',' + keywordLower) || tag.includes(',' + keywordLower + ','))) {
-            score += 1;
+          // 标签匹配权重最低，使用包含匹配（不区分大小写）
+          else if (tagLowers.some(tag => tag.toLowerCase().includes(keywordLower))) {
+            matchScore += 1;
             matchedReason = 'Tag match';
           }
         });
         
-        // 添加流行度得分（基于销量）
+        // 如果没有关键词匹配，直接返回null（后面会过滤掉）
+        if (matchScore === 0) {
+          return null;
+        }
+        
+        // 添加流行度得分（基于销量）作为排序辅助，但不影响是否被选中
         const popularityScore = item.sales / 200; // 标准化销量得分
-        score += popularityScore;
+        const totalScore = matchScore + popularityScore;
         
         return {
           item,
-          score,
-          reason: matchedReason || (aiInsights ? 'AI recommendation' : 'Match found')
+          score: totalScore,
+          matchScore: matchScore,
+          reason: matchedReason
         };
       })
-      .filter(item => item.score > 0.5) // 只保留有匹配的项（提高阈值）
+      .filter(item => item !== null && item.matchScore > 0) // 只保留有匹配的项
       .sort((a, b) => b.score - a.score) // 按得分降序排序
       .slice(0, 6) // 只返回前6个
       .map(({ item, reason }) => ({
