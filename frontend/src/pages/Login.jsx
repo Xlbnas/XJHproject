@@ -1,8 +1,8 @@
-import React, { useState, useContext, useEffect } from 'react';
-import AuthContext from '../context/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-  const { currentUser, login, register, logout } = useContext(AuthContext);
+  const { user, login, register, logout } = useAuth();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
@@ -30,7 +30,7 @@ const Login = () => {
       }
       const result = await register(phone, password, nickname);
       if (!result.success) {
-        setError(result.message);
+        setError(result.error);
       }
     } else {
       if (!phone || !password) {
@@ -39,7 +39,7 @@ const Login = () => {
       }
       const result = await login(phone, password);
       if (!result.success) {
-        setError(result.message);
+        setError(result.error);
       }
     }
   };
@@ -90,16 +90,16 @@ const Login = () => {
 
   return (
     <div>
-      {currentUser ? (
+      {user ? (
         <div className="profile-section">
           <div className="profile-card">
             <div className="profile-avatar">
-              {currentUser.nickname ? currentUser.nickname[0].toUpperCase() : 'U'}
+              {user.nickname ? user.nickname[0].toUpperCase() : 'U'}
             </div>
             <div className="profile-info">
-              <h2>{currentUser.nickname}</h2>
-              <p>Phone: {currentUser.phone}</p>
-              <p>Joined: {new Date(currentUser.created_at).toLocaleDateString()}</p>
+              <h2>{user.nickname}</h2>
+              <p>Phone: {user.phone}</p>
+              <p>Joined: {new Date(user.created_at).toLocaleDateString()}</p>
             </div>
             <div className="profile-actions">
               <button className="primary-btn" onClick={logout}>Logout</button>
