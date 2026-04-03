@@ -5,18 +5,20 @@ import { useAuth } from '../context/AuthContext';
 import '../index.css';
 
 const Orders = () => {
+  const { user, isLoading } = useAuth();
   const [orders, setOrders] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
-  const { user } = useAuth();
   
   // 使用相对路径
   const socket = io('/');
   
   useEffect(() => {
-    if (user) {
+    if (!isLoading && user) {
       loadOrders();
     }
-    
+  }, [user, isLoading, selectedFilter]);
+  
+  useEffect(() => {
     // 监听订单状态更新
     socket.on('order:statusUpdated', (data) => {
       console.log('Order status updated:', data);
@@ -95,7 +97,24 @@ const Orders = () => {
     const currentIndex = statuses.indexOf(status);
     return currentIndex < statuses.length - 1 ? statuses[currentIndex + 1] : null;
   };
-  
+
+  if (isLoading) {
+    return (
+      <div className="orders-empty">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="orders-empty">
+        <p>Please login to view your orders</p>
+        <a href="/login" className="primary-btn">Login</a>
+      </div>
+    );
+  }
+
   return (
     <div className="orders-container">
       <div className="orders-header">

@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (phone, password) => {
+    setIsLoading(true);
     try {
       // 使用相对路径
       const response = await axios.post('/api/auth/login', {
@@ -47,10 +48,13 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: userData, token };
     } catch (error) {
       return { success: false, error: error.response?.data?.message || 'Login failed' };
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const register = async (phone, password, nickname) => {
+    setIsLoading(true);
     try {
       // 使用相对路径
       const response = await axios.post('/api/auth/register', {
@@ -64,6 +68,8 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: userData, token };
     } catch (error) {
       return { success: false, error: error.response?.data?.message || 'Register failed' };
+    } finally {
+      setIsLoading(false);
     }
   };
 
