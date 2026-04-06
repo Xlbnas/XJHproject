@@ -39,7 +39,7 @@ const Orders = () => {
           Authorization: `Bearer ${localStorage.getItem('smartorder_token')}`
         }
       });
-      setOrders(response.data.orders);
+      setOrders(response.data);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     }
