@@ -241,6 +241,7 @@ const Order = () => {
 
     try {
       const items = cart.map(item => ({
+        menu_item_id: item.id,
         name: item.name,
         price: item.price,
         quantity: item.quantity

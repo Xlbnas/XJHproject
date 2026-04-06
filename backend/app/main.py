@@ -17,7 +17,7 @@ from .auth import (
 from .schemas import (
     MenuItemCreate, MenuItemResponse,
     UserCreate, UserResponse, UserLogin, Token,
-    OrderCreate, OrderResponse, OrderStatusUpdate, OrderReviewCreate,
+    OrderCreate, OrderResponse, OrderItemResponse, OrderStatusUpdate, OrderReviewCreate,
     RecommendationRequest, RecommendationResponse, RecommendationItem
 )
 
