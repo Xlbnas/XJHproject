@@ -1,86 +1,78 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
-  return context;
-};
-
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          // 使用相对路径
-          const response = await axios.get('/api/auth/me', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setUser(response.data.user);
-        }
-      } catch (err) {
-        console.error('Auth check failed:', err);
-        localStorage.removeItem('token');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadUser();
+    const token = localStorage.getItem('smartorder_token');
+    if (token) {
+      fetchUserInfo(token);
+    } else {
+      setLoading(false);
+    }
   }, []);
 
-  const login = async (phone, password) => {
-    setIsLoading(true);
+  const fetchUserInfo = async (token) => {
     try {
-      // 使用相对路径
+      const response = await axios.get('/api/auth/me', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setCurrentUser(response.data.user);
+    } catch (error) {
+      console.error('Failed to fetch user info:', error);
+      localStorage.removeItem('smartorder_token');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const login = async (phone, password) => {
+    try {
       const response = await axios.post('/api/auth/login', {
         phone,
         password
       });
-      const { token, user: userData } = response.data;
-      localStorage.setItem('token', token);
-      setUser(userData);
-      return { success: true, user: userData, token };
+      const { user, token } = response.data;
+      localStorage.setItem('smartorder_token', token);
+      setCurrentUser(user);
+      return { success: true };
     } catch (error) {
-      return { success: false, error: error.response?.data?.message || 'Login failed' };
-    } finally {
-      setIsLoading(false);
+      return { success: false, message: error.response?.data?.message || 'Login failed' };
     }
   };
 
   const register = async (phone, password, nickname) => {
-    setIsLoading(true);
     try {
-      // 使用相对路径
       const response = await axios.post('/api/auth/register', {
         phone,
         password,
         nickname
       });
-      const { token, user: userData } = response.data;
-      localStorage.setItem('token', token);
-      setUser(userData);
-      return { success: true, user: userData, token };
+      const { user, token } = response.data;
+      localStorage.setItem('smartorder_token', token);
+      setCurrentUser(user);
+      return { success: true };
     } catch (error) {
-      return { success: false, error: error.response?.data?.message || 'Register failed' };
-    } finally {
-      setIsLoading(false);
+      return { success: false, message: error.response?.data?.message || 'Register failed' };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
+    localStorage.removeItem('smartorder_token');
+    setCurrentUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ currentUser, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export default AuthContext;

@@ -1,210 +1,162 @@
-import React, { useState, useEffect } from 'react';
-import { io } from 'socket.io-client';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
-import '../index.css';
+import AuthContext from '../context/AuthContext';
+import io from 'socket.io-client';
 
 const Orders = () => {
-  const { user, isLoading } = useAuth();
+  const { currentUser } = useContext(AuthContext);
   const [orders, setOrders] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
-  
-  // 使用相对路径
-  const socket = io('/');
-  
+
   useEffect(() => {
-    if (!isLoading && user) {
-      loadOrders();
+    if (currentUser) {
+      fetchOrders();
     }
-  }, [user, isLoading, selectedFilter]);
-  
+  }, [currentUser, selectedFilter]);
+
   useEffect(() => {
+    // 初始化WebSocket连接
+    const socket = io(window.location.origin);
+
     // 监听订单状态更新
     socket.on('order:statusUpdated', (data) => {
-      console.log('Order status updated:', data);
-      loadOrders();
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.order_no === data.order_no ? { ...order, status: data.status } : order
+        )
+      );
     });
-    
+
     return () => {
-      socket.off('order:statusUpdated');
+      socket.disconnect();
     };
-  }, [user, selectedFilter]);
-  
-  const loadOrders = async () => {
+  }, []);
+
+  const fetchOrders = async () => {
     try {
-      // 使用相对路径
       const response = await axios.get(`/api/orders${selectedFilter !== 'all' ? `?status=${selectedFilter}` : ''}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('smartorder_token')}`
         }
       });
-      setOrders(response.data);
+      setOrders(response.data.orders);
     } catch (error) {
-      console.error('Failed to load orders:', error);
+      console.error('Failed to fetch orders:', error);
     }
-  };
-  
-  const handleStatusUpdate = async (orderNo, newStatus) => {
-    try {
-      // 使用相对路径
-      await axios.patch(`/api/orders/${orderNo}/status`, { status: newStatus }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      loadOrders();
-    } catch (error) {
-      console.error('Failed to update order status:', error);
-    }
-  };
-  
-  const handleSubmitReview = async (orderNo, rating, comment) => {
-    try {
-      // 使用相对路径
-      await axios.post(`/api/orders/${orderNo}/review`, { rating, comment }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      loadOrders();
-    } catch (error) {
-      console.error('Failed to submit review:', error);
-    }
-  };
-  
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return '#f59e0b';
-      case 'preparing': return '#3b82f6';
-      case 'delivering': return '#10b981';
-      case 'completed': return '#14b8a6';
-      default: return '#6b7280';
-    }
-  };
-  
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'pending': return 'Pending';
-      case 'preparing': return 'Preparing';
-      case 'delivering': return 'Delivering';
-      case 'completed': return 'Completed';
-      default: return status;
-    }
-  };
-  
-  const getNextStatus = (status) => {
-    const statuses = ['pending', 'preparing', 'delivering', 'completed'];
-    const currentIndex = statuses.indexOf(status);
-    return currentIndex < statuses.length - 1 ? statuses[currentIndex + 1] : null;
   };
 
-  if (isLoading) {
-    return (
-      <div className="orders-empty">
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  const statusLabels = {
+    pending: 'Pending',
+    preparing: 'Preparing',
+    delivering: 'Delivering',
+    completed: 'Completed'
+  };
 
-  if (!user) {
+  const statusColors = {
+    pending: '#f59e0b',
+    preparing: '#2563eb',
+    delivering: '#10b981',
+    completed: '#6b7280'
+  };
+
+  const renderOrderTimeline = (status) => {
+    const statusSteps = ['pending', 'preparing', 'delivering', 'completed'];
+    const currentStepIdx = statusSteps.indexOf(status);
+
     return (
-      <div className="orders-empty">
-        <p>Please login to view your orders</p>
-        <a href="/login" className="primary-btn">Login</a>
+      <div className="order-timeline">
+        {statusSteps.map((step, idx) => {
+          const done = idx <= currentStepIdx ? 'done' : '';
+          const active = idx === currentStepIdx ? 'active' : '';
+          return (
+            <>
+              <div className={`timeline-step ${done} ${active}`}>
+                <div className="timeline-dot"></div>
+                <span>{statusLabels[step]}</span>
+              </div>
+              {idx < statusSteps.length - 1 && (
+                <div className={`timeline-line ${idx < currentStepIdx ? 'done' : ''}`}></div>
+              )}
+            </>
+          );
+        })}
       </div>
     );
-  }
+  };
+
+  const handleRateOrder = (orderId) => {
+    // 这里可以实现评价功能
+    console.log('Rate order:', orderId);
+  };
+
+  const handleReorder = (order) => {
+    // 这里可以实现重新下单功能
+    console.log('Reorder:', order);
+  };
 
   return (
-    <div className="orders-container">
-      <div className="orders-header">
-        <h1>Your Orders</h1>
-        <div className="order-filters">
-          <button 
-            className={selectedFilter === 'all' ? 'active' : ''}
-            onClick={() => setSelectedFilter('all')}
-          >
-            All
-          </button>
-          <button 
-            className={selectedFilter === 'pending' ? 'active' : ''}
-            onClick={() => setSelectedFilter('pending')}
-          >
-            Pending
-          </button>
-          <button 
-            className={selectedFilter === 'preparing' ? 'active' : ''}
-            onClick={() => setSelectedFilter('preparing')}
-          >
-            Preparing
-          </button>
-          <button 
-            className={selectedFilter === 'delivering' ? 'active' : ''}
-            onClick={() => setSelectedFilter('delivering')}
-          >
-            Delivering
-          </button>
-          <button 
-            className={selectedFilter === 'completed' ? 'active' : ''}
-            onClick={() => setSelectedFilter('completed')}
-          >
-            Completed
-          </button>
+    <div>
+      <div className="orders-page-header">
+        <div>
+          <h2>My Orders</h2>
+          <p className="orders-subtitle">Track your order status and history</p>
         </div>
       </div>
-      
+
+      <div className="orders-tabs">
+        {['all', 'pending', 'preparing', 'delivering', 'completed'].map(filter => (
+          <button
+            key={filter}
+            className={`orders-tab ${selectedFilter === filter ? 'active' : ''}`}
+            onClick={() => setSelectedFilter(filter)}
+          >
+            {filter === 'all' ? 'All' : statusLabels[filter]}
+          </button>
+        ))}
+      </div>
+
       <div className="orders-list">
         {orders.length === 0 ? (
-          <div className="empty-orders">
+          <div className="orders-empty">
             <p>No orders found</p>
+            <a href="/order" className="primary-btn">Start Ordering</a>
           </div>
         ) : (
           orders.map(order => (
             <div key={order.order_no} className="order-card">
-              <div className="order-header-info">
-                <div className="order-number">Order #{order.order_no}</div>
-                <div className="order-status" style={{ color: getStatusColor(order.status) }}>
-                  {getStatusText(order.status)}
+              <div className="order-card-header">
+                <div>
+                  <span className="order-id">{order.order_no}</span>
+                  <span className="order-date">{new Date(order.created_at).toLocaleString()}</span>
+                </div>
+                <span 
+                  className="order-status-badge" 
+                  style={{ backgroundColor: statusColors[order.status] }}
+                >
+                  {statusLabels[order.status]}
+                </span>
+              </div>
+              <div className="order-restaurant-name">🏪 {order.restaurant}</div>
+              <div className="order-card-items">
+                {/* 这里可以从order_items表中获取订单商品信息 */}
+                <div className="order-item-row">
+                  <span className="order-item-name">{order.order_no} items</span>
+                  <span className="order-item-price">¥{order.total_price.toFixed(2)}</span>
                 </div>
               </div>
-              
-              <div className="order-items">
-                {order.items.map((item, index) => (
-                  <div key={index} className="order-item">
-                    <div className="order-item-name">{item.name}</div>
-                    <div className="order-item-details">
-                      ¥{item.price.toFixed(2)} x {item.quantity}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="order-footer">
-                <div className="order-total">
-                  Total: ¥{order.total_price.toFixed(2)}
-                </div>
+              {renderOrderTimeline(order.status)}
+              <div className="order-card-footer">
+                <span className="order-total">Total: <strong>¥{order.total_price.toFixed(2)}</strong></span>
                 <div className="order-actions">
-                  {getNextStatus(order.status) && (
-                    <button 
-                      className="status-button"
-                      onClick={() => handleStatusUpdate(order.order_no, getNextStatus(order.status))}
-                    >
-                      Mark as {getStatusText(getNextStatus(order.status))}
-                    </button>
-                  )}
-                  {order.status === 'completed' && !order.rating && (
-                    <button 
-                      className="review-button"
-                      onClick={() => {
-                        const rating = prompt('Rate this order (1-5):');
-                        const comment = prompt('Add a comment:');
-                        if (rating && parseInt(rating) >= 1 && parseInt(rating) <= 5) {
-                          handleSubmitReview(order.order_no, parseInt(rating), comment);
-                        }
-                      }}
-                    >
-                      Leave Review
-                    </button>
+                  {order.status === 'completed' && (
+                    <>
+                      {order.rating > 0 ? (
+                        <span className="order-rated">Rated {'★'.repeat(order.rating)}{'☆'.repeat(5 - order.rating)}</span>
+                      ) : (
+                        <button className="primary-btn btn-sm" onClick={() => handleRateOrder(order.order_no)}>Rate</button>
+                      )}
+                      <button className="secondary-btn btn-sm" onClick={() => handleReorder(order)}>Reorder</button>
+                    </>
                   )}
                 </div>
               </div>

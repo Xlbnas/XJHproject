@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import AuthContext from '../context/AuthContext';
 
 const Header = () => {
-  const { user, logout } = useAuth();
+  const { currentUser, logout } = useContext(AuthContext);
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -11,11 +11,11 @@ const Header = () => {
     { path: '/', label: 'Home' },
     { path: '/order', label: 'Order' },
     { path: '/orders', label: 'My Orders' },
-    { path: '/login', label: user ? (user.nickname || 'Account') : 'Account' }
+    { path: '/login', label: currentUser ? (currentUser.nickname || 'Account') : 'Account' }
   ];
 
   // 只有管理员才能看到Merchant页面
-  if (user && user.phone === 'Xlbnas') {
+  if (currentUser && currentUser.phone === 'Xlbnas') {
     navLinks.push({ path: '/merchant', label: 'Merchant' });
   }
 
